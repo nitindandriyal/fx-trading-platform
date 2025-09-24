@@ -2,9 +2,9 @@ package pub.lab.trading.common.util;
 
 import java.io.IOException;
 
-@SuppressWarnings("NullableProblems")
 public class MutableString implements CharSequence, Appendable {
     private final StringBuilder builder;
+    private int hashCode = 0;
 
     public MutableString() {
         builder = new StringBuilder();
@@ -63,5 +63,37 @@ public class MutableString implements CharSequence, Appendable {
     @Override
     public CharSequence subSequence(int start, int end) {
         return builder.subSequence(start, end);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (this == o) {
+            return true;
+        }
+        if (o instanceof CharSequence c) {
+            if (c.length() != length()) {
+                return false;
+            }
+            for (int i = 0; i < length(); i++) {
+                if (builder.charAt(i) != c.charAt(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            for (int i = 0; i < length(); i++) {
+                hashCode = 31 * hashCode + charAt(i);
+            }
+        }
+        return hashCode;
     }
 }

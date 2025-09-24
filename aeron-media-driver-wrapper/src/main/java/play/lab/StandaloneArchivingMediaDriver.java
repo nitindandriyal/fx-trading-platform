@@ -25,7 +25,7 @@ public class StandaloneArchivingMediaDriver {
 
         MediaDriver.Context mediaDriverContext = new MediaDriver.Context()
                 .aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR)
-                .threadingMode(ThreadingMode.SHARED)
+                .threadingMode(ThreadingMode.DEDICATED)
                 .warnIfDirectoryExists(true)
                 .termBufferSparseFile(true); // for Windows compatibility
 
