@@ -3,6 +3,8 @@ package pub.lab.trading.common.config;
 import org.agrona.collections.Int2ObjectHashMap;
 
 public enum StreamId {
+
+    BOOTSTRAP_STREAM(1),
     RAW_QUOTE(1000),
     MARKET_QUOTE(2000),
     CLIENT_QUOTE(3000),

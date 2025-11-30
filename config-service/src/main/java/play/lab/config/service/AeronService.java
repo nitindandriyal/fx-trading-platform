@@ -148,7 +148,7 @@ public enum AeronService {
         LOGGER.info("Sent tier: tierId={}, tierName={}", tierId, tierName);
     }
 
-    private List<ClientTierFlyweight> replayTiers() {
+    private void replayTiers() {
         synchronized (cache) {
             cache.clear();
         }
@@ -157,7 +157,7 @@ public enum AeronService {
         if (recordingId == -1) {
             LOGGER.warn("No recordings found for {}:{}. Returning empty cache.",
                     AeronConfigs.CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
-            return new ArrayList<>(cache);
+            return;
         }
 
         int attempt = 1;
@@ -211,7 +211,6 @@ public enum AeronService {
             );
         }
 
-        return List.of();
     }
 
     private void consumeQuotes(DirectBuffer buf, int offset) {

@@ -3,12 +3,12 @@ package pub.lab.trading.common.config;
 import org.agrona.collections.Int2ObjectHashMap;
 
 public enum AppId {
-    AERON_MEDIA_DRIVER(0),
-    CONFIG_SERVICE(1),
-    QUOTING_ENGINE(2),
-    PRICING_ENGINE(3),
-    MARKET_DATA(4),
-    STANDARD_ADAPTER(5);
+    AERON_MEDIA_DRIVER((short) 0),
+    CONFIG_SERVICE((short) 1),
+    QUOTING_ENGINE((short) 2),
+    PRICING_ENGINE((short) 3),
+    MARKET_DATA((short) 4),
+    STANDARD_ADAPTER((short) 5);
 
     private static final Int2ObjectHashMap<AppId> MAP = new Int2ObjectHashMap<>();
 
@@ -18,9 +18,9 @@ public enum AppId {
         }
     }
 
-    private final int code;
+    private final short code;
 
-    AppId(int code) {
+    AppId(short code) {
         this.code = code;
     }
 
@@ -28,7 +28,7 @@ public enum AppId {
         return MAP.get(code);
     }
 
-    public int getCode() {
+    public short getCode() {
         return code;
     }
 }

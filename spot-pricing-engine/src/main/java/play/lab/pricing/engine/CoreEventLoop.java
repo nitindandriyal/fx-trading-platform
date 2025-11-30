@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import play.lab.pricing.engine.feed.SpotPricerPipe;
 import pub.lab.trading.common.config.AeronConfigs;
 import pub.lab.trading.common.config.AppId;
+import pub.lab.trading.common.config.EnvId;
 import pub.lab.trading.common.config.caches.ConfigAgent;
 import pub.lab.trading.common.lifecycle.HeartBeatAgent;
 import pub.lab.trading.common.lifecycle.MultiStreamPoller;
@@ -22,7 +23,7 @@ public class CoreEventLoop {
 
     public CoreEventLoop(final IdleStrategy idleStrategy, final long heartbeatIntervalMs) {
         this.aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR));
-        ConfigAgent configAgent = new ConfigAgent(aeron);
+        ConfigAgent configAgent = new ConfigAgent(aeron, AppId.PRICING_ENGINE, EnvId.valueOf(System.getenv("env")));
         agentRunner = new AgentRunner(idleStrategy, Throwable::printStackTrace, null, new MultiStreamPoller(
                 "pricing-engine-poller",
                 new Worker[]{

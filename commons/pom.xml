@@ -19,6 +19,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>pub.lab.trading</groupId>
+            <artifactId>common-schemas</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>uk.co.real-logic</groupId>
             <artifactId>sbe-all</artifactId>
         </dependency>
@@ -35,58 +40,5 @@
             <artifactId>aeron-all</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <!-- Plugin to execute SBE code generation -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>generate-sbe-sources</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>uk.co.real_logic.sbe.SbeTool</mainClass>
-                            <arguments>
-                                <argument>${project.basedir}/src/main/resources/sbe/trading-model.xml</argument>
-                            </arguments>
-                            <systemProperties>
-                                <systemProperty>
-                                    <key>sbe.output.dir</key>
-                                    <value>${project.basedir}/target/generated-sources/sbe</value>
-                                </systemProperty>
-                            </systemProperties>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Plugin to add generated sources to the project -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>add-sbe-sources</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.basedir}/target/generated-sources/sbe</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

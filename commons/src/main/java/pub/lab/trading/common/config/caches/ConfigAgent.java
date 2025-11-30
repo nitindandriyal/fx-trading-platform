@@ -1,145 +1,153 @@
 package pub.lab.trading.common.config.caches;
 
 import io.aeron.Aeron;
+import io.aeron.Publication;
 import io.aeron.Subscription;
+import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import play.lab.model.sbe.ClientTierConfigMessageDecoder;
-import play.lab.model.sbe.ConfigLoadCompleteMessageDecoder;
-import play.lab.model.sbe.CurrencyConfigMessageDecoder;
-import play.lab.model.sbe.MessageHeaderDecoder;
+import play.lab.model.sbe.*;
+import pub.lab.trading.common.config.AeronConfigs;
+import pub.lab.trading.common.config.AppId;
+import pub.lab.trading.common.config.EnvId;
 import pub.lab.trading.common.config.StreamId;
 import pub.lab.trading.common.lifecycle.Worker;
-import pub.lab.trading.common.model.ClientTierLevel;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
+import static pub.lab.trading.common.config.AeronConfigs.BOOTSTRAP_CHANNEL;
 import static pub.lab.trading.common.config.AeronConfigs.CONFIG_CHANNEL;
 
 public class ConfigAgent implements Worker {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigAgent.class);
 
-    private final Subscription subscription;
-    private final CurrencyConfigMessageDecoder currencyDecoder;
-    private final ClientTierConfigMessageDecoder clientTierDecoder;
-    private final ConfigLoadCompleteMessageDecoder completeDecoder;
-    private final UnsafeBuffer buffer;
+    private final Subscription configSubscription;
+    private final Publication bootstrapPublication;
 
-    // caches
+    private final MessageHeaderDecoder headerDecoder = new MessageHeaderDecoder();
+    private final CurrencyConfigMessageDecoder currencyDecoder = new CurrencyConfigMessageDecoder();
+    private final ClientTierConfigMessageDecoder clientTierDecoder = new ClientTierConfigMessageDecoder();
+    private final BootstrapAckDecoder ackDecoder = new BootstrapAckDecoder();
+    private final BootstrapCompleteDecoder completeDecoder = new BootstrapCompleteDecoder();
+
+    private final UnsafeBuffer buffer = new UnsafeBuffer(new byte[4096]);
+
+    private final long instanceId = ThreadLocalRandom.current().nextLong();
+    private long sessionId = 0L;                    // will be set on Ack
+    private final CountDownLatch bootstrapCompleteLatch = new CountDownLatch(1);
+
     private final CurrencyConfigCache currencyConfigCache = new CurrencyConfigCache();
     private final ClientTierConfigCache clientTierConfigCache = new ClientTierConfigCache();
 
-    private volatile boolean isInitialLoadComplete;
+    private volatile boolean requestSent = false;
+    private final AppId appId;
+    private final EnvId envId;
 
-    public ConfigAgent(Aeron aeron) {
-        this.subscription = aeron.addSubscription(CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
-        this.currencyDecoder = new CurrencyConfigMessageDecoder();
-        this.clientTierDecoder = new ClientTierConfigMessageDecoder();
-        this.completeDecoder = new ConfigLoadCompleteMessageDecoder();
-        this.buffer = new UnsafeBuffer(new byte[256]);
-        this.isInitialLoadComplete = false;
+    public ConfigAgent(Aeron aeron, AppId appId, EnvId envId) {
+        this.configSubscription = aeron.addSubscription(CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
+        this.bootstrapPublication = aeron.addExclusivePublication(BOOTSTRAP_CHANNEL, StreamId.BOOTSTRAP_STREAM.getCode());
+        this.appId = appId;
+        this.envId = envId;
 
-        defaultLoad();
-    }
-
-    private void defaultLoad() {
-        ClientTierConfig clientTierConfig = new ClientTierConfig();
-        short defaultValue = 1;
-        clientTierConfig.init(
-                ClientTierLevel.GOLD.getId(),
-                clientTierConfig.tierName(),
-                1.0,
-                1.0,
-                1L,
-                1L,
-                1L,
-                1.0,
-                1.0,
-                defaultValue,
-                true,
-                true,
-                true,
-                500_000_000,
-                defaultValue,
-                1.0,
-                1.0,
-                1.0
-        );
-        clientTierConfigCache.update(ClientTierLevel.GOLD, clientTierConfig);
-
-        clientTierConfig.init(
-                ClientTierLevel.SILVER.getId(),
-                clientTierConfig.tierName(),
-                1.5,
-                1.5,
-                1L,
-                1L,
-                1L,
-                1.0,
-                1.0,
-                defaultValue,
-                true,
-                true,
-                true,
-                500_000_000,
-                defaultValue,
-                1.5,
-                1.5,
-                1.5
-        );
-        clientTierConfigCache.update(ClientTierLevel.SILVER, clientTierConfig);
-
+        LOGGER.info("ConfigAgent starting — instanceId={}", instanceId);
     }
 
     @Override
     public String roleName() {
-        return "ConfigProcessor";
-    }
-
-    public CurrencyConfigCache getCurrencyConfigCache() {
-        return currencyConfigCache;
-    }
-
-    public ClientTierConfigCache getClientTierConfigCache() {
-        return clientTierConfigCache;
+        return "ConfigAgent";
     }
 
     @Override
     public int doWork() {
-        return subscription.poll((buf, offset, length, header) -> {
-            buffer.putBytes(0, buf, offset, length);
-            MessageHeaderDecoder headerDecoder = new MessageHeaderDecoder();
-            headerDecoder.wrap(buffer, 0);
-            int templateId = headerDecoder.templateId();
+        // Keep sending BootstrapRequest until we get Ack
+        if (!requestSent || sessionId == 0) {
+            sendBootstrapRequest();
+        }
 
-            if (templateId == CurrencyConfigMessageDecoder.TEMPLATE_ID) {
-                updateCurrencyConfig(headerDecoder);
-            } else if (templateId == ClientTierConfigMessageDecoder.TEMPLATE_ID) {
-                updateClientTierConfig(headerDecoder);
-            } else if (templateId == ConfigLoadCompleteMessageDecoder.TEMPLATE_ID) {
-                if (!isInitialLoadComplete) {
-                    completeDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
-                    long timestamp = completeDecoder.timestamp();
-                    LOGGER.info("Initial config load complete at timestamp: {}", timestamp);
-                    isInitialLoadComplete = true;
-                }
-            } else {
-                LOGGER.warn("Unknown config message templateId: {}", templateId);
+        return configSubscription.poll(this::processFragment, 10);
+    }
+
+    private void sendBootstrapRequest() {
+        if (!bootstrapPublication.isConnected()) return;
+
+        var headerEncoder = new MessageHeaderEncoder();
+        var encoder = new BootstrapRequestEncoder();
+        var tempBuffer = new UnsafeBuffer(new byte[512]);
+
+        encoder.wrapAndApplyHeader(tempBuffer, 0, headerEncoder)
+                .serviceId(appId.getCode())
+                .env(envId.getCode())
+                .instanceId(instanceId)
+                .requestSeq(0)
+                .timestamp(System.currentTimeMillis());
+
+        long result = bootstrapPublication.offer(tempBuffer, 0,
+                headerEncoder.encodedLength() + encoder.encodedLength());
+
+        if (result > 0) {
+            requestSent = true;
+            LOGGER.debug("BootstrapRequest sent (instanceId={})", instanceId);
+        }
+    }
+
+    private void processFragment(DirectBuffer buf, int offset, int length, io.aeron.logbuffer.Header header) {
+        buffer.putBytes(0, buf, offset, length);
+        headerDecoder.wrap(buffer, 0);
+        int templateId = headerDecoder.templateId();
+
+        // 1. Wait for our Ack
+        if (templateId == BootstrapAckDecoder.TEMPLATE_ID && sessionId == 0) {
+            ackDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
+            if (ackDecoder.instanceId() == instanceId) {
+                this.sessionId = ackDecoder.sessionId();  // ← now we know our session
+                LOGGER.info("BootstrapAck received — sessionId={}", this.sessionId);
             }
-        }, 10);
+            return;
+        }
+
+        // 2. During bootstrap: accept ALL config messages (safe because only one client bootstraps at a time)
+        if (this.sessionId != 0) {
+            switch (templateId) {
+                case CurrencyConfigMessageDecoder.TEMPLATE_ID -> {
+                    currencyDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
+                    currencyConfigCache.update(currencyDecoder);
+                }
+                case ClientTierConfigMessageDecoder.TEMPLATE_ID -> {
+                    clientTierDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
+                    clientTierConfigCache.update(clientTierDecoder);
+                }
+            }
+        }
+
+        // 3. Final EOS
+        if (templateId == BootstrapCompleteDecoder.TEMPLATE_ID) {
+            completeDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
+            if (completeDecoder.sessionId() == this.sessionId) {
+                LOGGER.info("BootstrapComplete received — all config loaded ({} messages)", completeDecoder.configCount());
+                bootstrapCompleteLatch.countDown();
+            }
+        }
     }
 
-    private void updateClientTierConfig(MessageHeaderDecoder headerDecoder) {
-        clientTierDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
-        clientTierConfigCache.update(clientTierDecoder);
+    // Zero-CPU, deterministic wait
+    public void awaitBootstrapComplete() throws InterruptedException {
+        LOGGER.info("Awaiting full config bootstrap...");
+        if (!bootstrapCompleteLatch.await(30, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("Bootstrap timeout — config service not responding");
+        }
+        LOGGER.info("Bootstrap successful — quoting engine ready");
     }
 
-    private void updateCurrencyConfig(MessageHeaderDecoder headerDecoder) {
-        currencyDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
-        currencyConfigCache.update(currencyDecoder);
-    }
+    public CurrencyConfigCache getCurrencyConfigCache()     { return currencyConfigCache; }
+    public ClientTierConfigCache getClientTierConfigCache() { return clientTierConfigCache; }
 
     @Override
     public void onClose() {
-        subscription.close();
+        configSubscription.close();
+        bootstrapPublication.close();
     }
 }

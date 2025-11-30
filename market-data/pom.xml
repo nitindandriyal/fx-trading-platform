@@ -19,6 +19,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>pub.lab.trading</groupId>
+            <artifactId>common-schemas</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.aeron</groupId>
             <artifactId>aeron-all</artifactId>
             <version>1.47.4</version>

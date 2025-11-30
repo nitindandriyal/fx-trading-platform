@@ -49,6 +49,11 @@
         </dependency>
         <dependency>
             <groupId>pub.lab.trading</groupId>
+            <artifactId>common-schemas</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pub.lab.trading</groupId>
             <artifactId>market-data</artifactId>
             <version>${project.version}</version>
         </dependency>
