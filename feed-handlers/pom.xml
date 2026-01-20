@@ -8,7 +8,7 @@
         <artifactId>fx-trading-platform</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-
+    <packaging>pom</packaging>
     <artifactId>feed-handlers</artifactId>
 
     <modules>

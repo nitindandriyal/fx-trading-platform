@@ -13,7 +13,7 @@
         <field name="tenor" id="3" type="uint32"/>
         <field name="valueDate" id="4" type="uint64"/>
         <field name="clientTier" id="5" type="uint32"/>
-        <group name="rung" id="6" dimensionType="groupSizeEncoding"
+        <group name="rung" id="6"
                description="Bid, Ask, and Volume for each price level">
             <field name="bid" id="601" type="double" description="Bid price"/>
             <field name="ask" id="602" type="double" description="Ask price"/>

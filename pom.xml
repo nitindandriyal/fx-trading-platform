@@ -24,7 +24,6 @@
         <module>commons</module>
         <module>common-schemas</module>
         <module>config-service</module>
-        <module>feed-handlers</module>
         <module>tick-data-ingestor</module>
     </modules>
     <dependencyManagement>
