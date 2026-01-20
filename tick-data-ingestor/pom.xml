@@ -11,17 +11,10 @@
 
     <artifactId>tick-data-ingestor</artifactId>
 
-    <properties>
-        <maven.compiler.source>24</maven.compiler.source>
-        <maven.compiler.target>24</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.questdb</groupId>
             <artifactId>questdb</artifactId>
-            <version>9.3.1</version>
         </dependency>
         <dependency>
             <groupId>pub.lab.trading</groupId>
@@ -36,7 +29,6 @@
         <dependency>
             <groupId>io.aeron</groupId>
             <artifactId>aeron-all</artifactId>
-            <version>1.47.4</version>
         </dependency>
     </dependencies>
 

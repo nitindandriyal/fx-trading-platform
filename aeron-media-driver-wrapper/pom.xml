@@ -7,6 +7,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <artifactId>aeron-media-driver-wrapper</artifactId>
+
     <dependencies>
         <dependency>
             <groupId>pub.lab.trading</groupId>
@@ -21,11 +22,11 @@
         <dependency>
             <groupId>io.aeron</groupId>
             <artifactId>aeron-all</artifactId>
-            <version>1.47.4</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
+
 </project>

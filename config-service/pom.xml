@@ -11,14 +11,14 @@
         <relativePath/>
     </parent>
 
+    <groupId>pub.lab.trading</groupId>
     <artifactId>config-service</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <vaadin.version>24.7.3</vaadin.version>
+        <aeron.version>1.47.4</aeron.version>
         <vaadin.frontend.frontend.folder>${project.basedir}/src/main/frontend</vaadin.frontend.frontend.folder>
     </properties>
 
@@ -31,12 +31,12 @@
         <dependency>
             <groupId>io.aeron</groupId>
             <artifactId>aeron-client</artifactId>
-            <version>1.47.4</version>
+            <version>${aeron.version}</version>
         </dependency>
         <dependency>
             <groupId>io.aeron</groupId>
             <artifactId>aeron-archive</artifactId>
-            <version>1.47.4</version>
+            <version>${aeron.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

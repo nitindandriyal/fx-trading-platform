@@ -30,12 +30,17 @@ public class CurrencyMapper {
         map(CurrencyPair.EURCHF, Currency.EUR, Currency.CHF);
         map(CurrencyPair.GBPJPY, Currency.GBP, Currency.JPY);
         map(CurrencyPair.AUDJPY, Currency.AUD, Currency.JPY);
+        map(CurrencyPair.AUDNZD, Currency.AUD, Currency.NZD);
 
         // Exotic & Commodities
         map(CurrencyPair.USDCNH, Currency.USD, Currency.CNH);
         map(CurrencyPair.USDMXN, Currency.USD, Currency.MXN);
         map(CurrencyPair.XAUUSD, Currency.XAU, Currency.USD);
         map(CurrencyPair.XAGUSD, Currency.XAG, Currency.USD);
+        map(CurrencyPair.NZDJPY, Currency.NZD, Currency.JPY);
+        map(CurrencyPair.CADJPY, Currency.CAD, Currency.JPY);
+        map(CurrencyPair.EURCAD, Currency.EUR, Currency.CAD);
+        map(CurrencyPair.GBPCHF, Currency.GBP, Currency.CHF);
         // ... add remaining pairs following this pattern
     }
 

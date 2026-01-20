@@ -23,7 +23,7 @@ public class CoreEventLoop {
 
     public CoreEventLoop(final IdleStrategy idleStrategy, final long heartbeatIntervalMs) {
         this.aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR));
-        ConfigAgent configAgent = new ConfigAgent(aeron, AppId.PRICING_ENGINE, EnvId.valueOf(System.getenv("env")));
+        ConfigAgent configAgent = new ConfigAgent(aeron, AppId.PRICING_ENGINE, EnvId.valueOf(System.getProperty("env")));
         agentRunner = new AgentRunner(idleStrategy, Throwable::printStackTrace, null, new MultiStreamPoller(
                 "pricing-engine-poller",
                 new Worker[]{
