@@ -8,6 +8,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import play.lab.model.sbe.CurrencyPair;
 import play.lab.model.sbe.MessageHeaderDecoder;
 import play.lab.model.sbe.QuoteMessageDecoder;
 import pub.lab.trading.common.config.AeronConfigs;
@@ -32,7 +33,6 @@ public class SpotPricerPipe implements Worker {
     private final QuoteMessageWriter quoteMessageWriter = new QuoteMessageWriter();
     private final QuoteView quoteView = new QuoteView();
     private final FragmentHandler fragmentHandler;
-    private final MutableString symbolMutableString = new MutableString();
 
     public SpotPricerPipe(final Aeron aeron, final ConfigAgent configAgent) {
         this.clientTierConfigCache = configAgent.getClientTierConfigCache();
@@ -55,7 +55,7 @@ public class SpotPricerPipe implements Worker {
     private void consumeQuotes(DirectBuffer buf, int offset) {
         quoteView.wrap(buf, offset + MessageHeaderDecoder.ENCODED_LENGTH);
 
-        quoteView.getSymbol(symbolMutableString.init());
+        CurrencyPair currencyPair = quoteView.getSymbol();
         long timestamp = quoteView.priceCreationTimestamp();
         long tenor = quoteView.getTenor();
         long valueDate = quoteView.getValueDate();
@@ -77,9 +77,9 @@ public class SpotPricerPipe implements Worker {
                     double ask = mid + (spreadAdjust / 2.0) + adjustment;
 
                     LOGGER.info("symbol={}, timestamp={}, tenor={}, valueDate={}, clientTier={}, bid={}, ask={}",
-                            symbolMutableString, timestamp, tenor, valueDate, clientTier, bid, ask);
+                            currencyPair, timestamp, tenor, valueDate, clientTier, bid, ask);
                     quoteMessageWriter.beginQuote(
-                            symbolMutableString,
+                            currencyPair,
                             valueDate,
                             timestamp,
                             tenor,

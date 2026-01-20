@@ -1,35 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2020/sbe"
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   xmlns:xi="http://www.w3.org/2001/XInclude"
                    package="play.lab.model.sbe"
                    semanticVersion="1.0"
                    version="1"
                    id="1">
+    <xi:include href="common-types.xml"/>
 
-    <types>
-        <composite name="messageHeader">
-            <type name="blockLength" primitiveType="uint16"/>
-            <type name="templateId" primitiveType="uint16"/>
-            <type name="schemaId" primitiveType="uint16"/>
-            <type name="version" primitiveType="uint16"/>
-        </composite>
-
-        <enum name="BooleanEnum" encodingType="uint8">
-            <validValue name="False" value="0">0</validValue>
-            <validValue name="True" value="1">1</validValue>
-        </enum>
-
-        <type name="string64" primitiveType="char" length="64"/>
-        <type name="string8" primitiveType="char" length="8"/>
-        <type name="string32" primitiveType="char" length="32"/>
-
-        <composite name="groupSizeEncoding">
-            <type name="blockLength" primitiveType="uint16"/>
-            <type name="numInGroup" primitiveType="uint8"/>
-        </composite>
-    </types>
-
-    <message name="QuoteMessage" id="2">
-        <field name="symbol" id="1" type="string8"/>
+    <sbe:message name="QuoteMessage" id="2">
+        <field name="symbol" id="1" type="CurrencyPair"/>
         <field name="priceCreationTimestamp" id="2" type="uint64"/>
         <field name="tenor" id="3" type="uint32"/>
         <field name="valueDate" id="4" type="uint64"/>
@@ -40,5 +19,5 @@
             <field name="ask" id="602" type="double" description="Ask price"/>
             <field name="volume" id="603" type="double" description="Volume/lot size"/>
         </group>
-    </message>
+    </sbe:message>
 </sbe:messageSchema>

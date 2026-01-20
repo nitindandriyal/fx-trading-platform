@@ -1,45 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2020/sbe"
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   xmlns:xi="http://www.w3.org/2001/XInclude"
                    package="play.lab.model.sbe"
                    semanticVersion="1.0"
                    version="1"
                    id="1">
+    <xi:include href="common-types.xml"/>
 
-    <types>
-        <composite name="messageHeader">
-            <type name="blockLength" primitiveType="uint16"/>
-            <type name="templateId" primitiveType="uint16"/>
-            <type name="schemaId" primitiveType="uint16"/>
-            <type name="version" primitiveType="uint16"/>
-        </composite>
-
-        <enum name="BooleanEnum" encodingType="uint8">
-            <validValue name="False" value="0">0</validValue>
-            <validValue name="True" value="1">1</validValue>
-        </enum>
-
-        <type name="string64" primitiveType="char" length="64"/>
-        <type name="string8" primitiveType="char" length="8"/>
-        <type name="string32" primitiveType="char" length="32"/>
-
-        <composite name="groupSizeEncoding">
-            <type name="blockLength" primitiveType="uint16"/>
-            <type name="numInGroup" primitiveType="uint8"/>
-        </composite>
-    </types>
-
-    <message name="HeartbeatMessage" id="1">
+    <sbe:message name="HeartbeatMessage" id="1">
         <field name="appId" id="1" type="uint32"/>
         <field name="timestamp" id="2" type="uint64"/>
-    </message>
+    </sbe:message>
 
-    <message name="ClientProfileMessage" id="3">
+    <sbe:message name="ClientProfileMessage" id="3">
         <field name="clientId" id="1" type="uint32"/>
         <field name="clientTier" id="2" type="uint32"/>
         <field name="creditLimit" id="3" type="uint64"/>
-    </message>
+        <field name="allowedInstruments" id="4" type="uint64"/>
+    </sbe:message>
 
-    <message name="ClientTierConfigMessage" id="4">
+    <sbe:message name="ClientTierConfigMessage" id="4">
         <field name="tierId" id="1" type="uint16"/>
         <field name="tierName" id="2" type="string64"/>
         <field name="markupBps" id="3" type="double"/>
@@ -58,13 +38,21 @@
         <field name="tierSkew" id="16" type="double"/>
         <field name="clientTierSkew" id="17" type="double"/>
         <field name="signal" id="18" type="double"/>
-    </message>
+    </sbe:message>
 
-    <message name="CurrencyConfigMessage" id="5" description="Currency configuration">
+    <sbe:message name="CurrencyPairConfigMessage" id="5" description="Currency Pair configuration">
         <field name="id" id="11" type="int64" description="Unique currency ID"/>
-        <field name="symbol" id="12" type="string32" description="Currency symbol (e.g., EURUSD)"/>
+        <field name="symbol" id="12" type="CurrencyPair" description="Currency symbol (e.g., EURUSD)"/>
         <field name="spotPrecision" id="13" type="int32" description="Spot price precision"/>
         <field name="forwardPrecision" id="14" type="int32" description="Forward price precision"/>
         <field name="amountPrecision" id="15" type="int32" description="Amount precision"/>
-    </message>
+    </sbe:message>
+
+    <sbe:message name="CurrencyConfigMessage" id="6" description="Currency configuration">
+        <field name="id" id="11" type="int64" description="Unique currency ID"/>
+        <field name="currency" id="12" type="Currency" description="Currency symbol (e.g., EUR, USD)"/>
+        <field name="spotPrecision" id="13" type="int32" description="Spot price precision"/>
+        <field name="forwardPrecision" id="14" type="int32" description="Forward price precision"/>
+        <field name="amountPrecision" id="15" type="int32" description="Amount precision"/>
+    </sbe:message>
 </sbe:messageSchema>

@@ -1,6 +1,7 @@
 package pub.lab.trading.common.model.pricing;
 
 import org.agrona.concurrent.UnsafeBuffer;
+import play.lab.model.sbe.CurrencyPair;
 import play.lab.model.sbe.MessageHeaderEncoder;
 import play.lab.model.sbe.QuoteMessageEncoder;
 
@@ -23,7 +24,7 @@ public class QuoteMessageWriter {
         this.rungCounter = 0;
     }
 
-    public QuoteMessageWriter beginQuote(CharSequence symbol, long valueDate, long timestamp, long tenor, long clientTier, int totalRungCount) {
+    public QuoteMessageWriter beginQuote(CurrencyPair symbol, long valueDate, long timestamp, long tenor, long clientTier, int totalRungCount) {
         if (totalRungCount > MAX_LEVELS) {
             throw new IllegalArgumentException("Total rung count (" + totalRungCount + ") exceeds maximum (" + MAX_LEVELS + ")");
         }
@@ -83,7 +84,7 @@ public class QuoteMessageWriter {
     }
 
     // Convenience method for QuotePublisher
-    public QuoteMessageWriter write(String pair, double bid, double ask) {
+    public QuoteMessageWriter write(CurrencyPair pair, double bid, double ask) {
         return beginQuote(pair, 0L, System.currentTimeMillis(), 0L, 0L, 1)
                 .addRung(bid, ask, 1_000_000.0); // Default volume
     }

@@ -7,7 +7,10 @@ import org.slf4j.LoggerFactory;
 import play.lab.TickThrottle;
 import play.lab.marketdata.model.MarketDataTick;
 import play.lab.marketdata.model.RawPriceConfig;
+import play.lab.model.sbe.Currency;
+import play.lab.model.sbe.CurrencyPair;
 import pub.lab.trading.common.lifecycle.Worker;
+import pub.lab.trading.common.util.CurrencyMapper;
 import pub.lab.trading.common.util.HolidayCalendar;
 
 import java.util.*;
@@ -19,92 +22,92 @@ public class FxPriceGenerator implements Worker {
 
     private static final double DEFAULT_SPREAD_BP = 0.5;
     private static final double DEFAULT_VOLATILITY = 0.5;
-    private final Map<String, PairModel> pairs = new HashMap<>();
-    private final Map<String, RawPriceConfig> configOverridesByCcy = new ConcurrentHashMap<>();
-    private final RawPriceConfig defaultConfig = new RawPriceConfig("XXX", DEFAULT_VOLATILITY, DEFAULT_SPREAD_BP);
+    private final Map<CurrencyPair, PairModel> pairs = new HashMap<>();
+    private final Map<Currency, RawPriceConfig> configOverridesByCcy = new ConcurrentHashMap<>();
+    private final RawPriceConfig defaultConfig = new RawPriceConfig(Currency.NULL_VAL, DEFAULT_VOLATILITY, DEFAULT_SPREAD_BP);
     private final QuotePublisher aeronPub = new QuotePublisher();
     private final TickThrottle throttle = new TickThrottle(1000);
 
     public FxPriceGenerator() {
         // Volatility overrides (annualized)
-        configOverridesByCcy.put("USD", new RawPriceConfig("USD", 0.020, 0.5)); // US Dollar
-        configOverridesByCcy.put("EUR", new RawPriceConfig("EUR", 0.018, 0.5)); // Euro
-        configOverridesByCcy.put("JPY", new RawPriceConfig("JPY", 0.030, 1.0)); // Japanese Yen
-        configOverridesByCcy.put("GBP", new RawPriceConfig("GBP", 0.025, 0.6)); // British Pound
-        configOverridesByCcy.put("CHF", new RawPriceConfig("CHF", 0.017, 0.4)); // Swiss Franc
-        configOverridesByCcy.put("AUD", new RawPriceConfig("AUD", 0.028, 0.6)); // Australian Dollar
-        configOverridesByCcy.put("NZD", new RawPriceConfig("NZD", 0.030, 0.7)); // New Zealand Dollar
-        configOverridesByCcy.put("CAD", new RawPriceConfig("CAD", 0.022, 0.5)); // Canadian Dollar
+        configOverridesByCcy.put(Currency.USD, new RawPriceConfig(Currency.USD, 0.020, 0.5)); // US Dollar
+        configOverridesByCcy.put(Currency.EUR, new RawPriceConfig(Currency.EUR, 0.018, 0.5)); // Euro
+        configOverridesByCcy.put(Currency.JPY, new RawPriceConfig(Currency.JPY, 0.030, 1.0)); // Japanese Yen
+        configOverridesByCcy.put(Currency.GBP, new RawPriceConfig(Currency.GBP, 0.025, 0.6)); // British Pound
+        configOverridesByCcy.put(Currency.CHF, new RawPriceConfig(Currency.CHF, 0.017, 0.4)); // Swiss Franc
+        configOverridesByCcy.put(Currency.AUD, new RawPriceConfig(Currency.AUD, 0.028, 0.6)); // Australian Dollar
+        configOverridesByCcy.put(Currency.NZD, new RawPriceConfig(Currency.NZD, 0.030, 0.7)); // New Zealand Dollar
+        configOverridesByCcy.put(Currency.CAD, new RawPriceConfig(Currency.CAD, 0.022, 0.5)); // Canadian Dollar
 
         // Default major pairs and crosses
-        add("EURUSD", 1.1000);
-        add("USDJPY", 145.00);
-        add("GBPUSD", 1.2500);
-        add("USDCHF", 0.8800);
-        add("AUDUSD", 0.6600);
-        add("NZDUSD", 0.6000);
-        add("USDCAD", 1.3600);
+        add(CurrencyPair.EURUSD, 1.1000);
+        add(CurrencyPair.USDJPY, 145.00);
+        add(CurrencyPair.GBPUSD, 1.2500);
+        add(CurrencyPair.USDCHF, 0.8800);
+        add(CurrencyPair.AUDUSD, 0.6600);
+        add(CurrencyPair.NZDUSD, 0.6000);
+        add(CurrencyPair.USDCAD, 1.3600);
 
         // Crosses (most traded)
-        add("EURJPY", 158.00);
-        add("EURGBP", 0.8800);
-        add("EURCHF", 0.9700);
-        add("GBPJPY", 184.50);
-        add("AUDJPY", 98.50);
-        add("NZDJPY", 90.20);
-        add("CADJPY", 107.30);
-        add("AUDNZD", 1.0700);
-        add("EURCAD", 1.4700);
-        add("GBPCHF", 1.1100);
+        add(CurrencyPair.EURJPY, 158.00);
+        add(CurrencyPair.EURGBP, 0.8800);
+        add(CurrencyPair.EURCHF, 0.9700);
+        add(CurrencyPair.GBPJPY, 184.50);
+        add(CurrencyPair.AUDJPY, 98.50);
+        add(CurrencyPair.NZDJPY, 90.20);
+        add(CurrencyPair.CADJPY, 107.30);
+        add(CurrencyPair.AUDNZD, 1.0700);
+        add(CurrencyPair.EURCAD, 1.4700);
+        add(CurrencyPair.GBPCHF, 1.1100);
 
     }
 
-    private void add(String pair, double initialPrice) {
+    private void add(CurrencyPair pair, double initialPrice) {
         double volatility = inferVolatility(pair);
         double spread = inferSpread(pair);
         pairs.put(pair, new PairModel(pair, initialPrice, volatility, spread));
     }
 
-    public void addSymbol(String symbol, double initialPrice, double volatility, double spread) {
-        configOverridesByCcy.put(symbol.substring(0, 3), new RawPriceConfig(symbol.substring(0, 3), volatility, spread));
-        configOverridesByCcy.put(symbol.substring(3), new RawPriceConfig(symbol.substring(0, 3), volatility, spread));
+    public void addSymbol(CurrencyPair symbol, double initialPrice, double volatility, double spread) {
+        configOverridesByCcy.put(CurrencyMapper.getBase(symbol.value()), new RawPriceConfig(CurrencyMapper.getBase(symbol.value()), volatility, spread));
+        configOverridesByCcy.put(CurrencyMapper.getTerm(symbol.value()), new RawPriceConfig(CurrencyMapper.getBase(symbol.value()), volatility, spread));
         pairs.put(symbol, new PairModel(symbol, initialPrice, volatility, spread));
     }
 
-    private double inferVolatility(String pair) {
-        String base = pair.substring(0, 3);
-        String quote = pair.substring(3);
+    private double inferVolatility(CurrencyPair pair) {
+        Currency base = CurrencyMapper.getBase(pair.value());
+        Currency quote = CurrencyMapper.getTerm(pair.value());
         return (configOverridesByCcy.getOrDefault(base, defaultConfig).getVolatility()
                 + configOverridesByCcy.getOrDefault(quote, defaultConfig).getVolatility()) / 2;
     }
 
-    private double inferSpread(String pair) {
-        String base = pair.substring(0, 3);
-        String quote = pair.substring(3);
+    private double inferSpread(CurrencyPair pair) {
+        Currency base = CurrencyMapper.getBase(pair.value());
+        Currency quote = CurrencyMapper.getTerm(pair.value());
         return Math.max(
                 configOverridesByCcy.getOrDefault(base, defaultConfig).getSpread(),
                 configOverridesByCcy.getOrDefault(quote, defaultConfig).getSpread()
         );
     }
 
-    public double getVol(String symbol) {
-        String base = symbol.substring(0, 3);
-        String quote = symbol.substring(3);
+    public double getVol(CurrencyPair pair) {
+        Currency base = CurrencyMapper.getBase(pair.value());
+        Currency quote = CurrencyMapper.getTerm(pair.value());
         return (configOverridesByCcy.getOrDefault(base, defaultConfig).getVolatility()
                 + configOverridesByCcy.getOrDefault(quote, defaultConfig).getVolatility()) * 0.5;
     }
 
-    public double getSpread(String symbol) {
-        String base = symbol.substring(0, 3);
-        String quote = symbol.substring(3);
+    public double getSpread(CurrencyPair pair) {
+        Currency base = CurrencyMapper.getBase(pair.value());
+        Currency quote = CurrencyMapper.getTerm(pair.value());
         return Math.max(
                 configOverridesByCcy.getOrDefault(base, defaultConfig).getSpread(),
                 configOverridesByCcy.getOrDefault(quote, defaultConfig).getSpread()
         );
     }
 
-    public void updateModel(String symbol, double vol, double spread) {
-        String base = symbol.substring(0, 3);
+    public void updateModel(CurrencyPair pair, double vol, double spread) {
+        Currency base = CurrencyMapper.getBase(pair.value());
         configOverridesByCcy.compute(base, (k, oldValue) -> {
             if (oldValue == null) {
                 return new RawPriceConfig(base, vol, spread);
@@ -114,7 +117,8 @@ public class FxPriceGenerator implements Worker {
                 return oldValue;
             }
         });
-        String term = symbol.substring(3);
+
+        Currency term = CurrencyMapper.getTerm(pair.value());
         configOverridesByCcy.compute(term, (k, oldValue) -> {
             if (oldValue == null) {
                 return new RawPriceConfig(term, vol, spread);
@@ -125,32 +129,29 @@ public class FxPriceGenerator implements Worker {
             }
         });
 
-        if (pairs.containsKey(symbol)) {
-            pairs.get(symbol).setVolatility(vol);
-            pairs.get(symbol).setSpread(spread);
+        if (pairs.containsKey(pair)) {
+            pairs.get(pair).setVolatility(vol);
+            pairs.get(pair).setSpread(spread);
         }
     }
 
-    public Set<String> symbols() {
+    public Set<CurrencyPair> symbols() {
         return pairs.keySet();
     }
 
-    public List<MarketDataTick> generateAll(long now, double dtSeconds) {
-        List<MarketDataTick> ticks = new ArrayList<>();
-        for (Map.Entry<String, PairModel> entry : pairs.entrySet()) {
+    public void generateAll(long now, double dtSeconds) {
+        for (Map.Entry<CurrencyPair, PairModel> entry : pairs.entrySet()) {
             PairModel model = entry.getValue();
             MarketDataTick tick = model.nextTick(now, dtSeconds);
-            ticks.add(tick);
             aeronPub.publish(tick);
         }
-        return ticks;
     }
 
     public List<RawPriceConfig> generateAllConfig() {
         return new ArrayList<>(configOverridesByCcy.values());
     }
 
-    public MarketDataTick generate(String symbol, long now, double dtSeconds) {
+    public MarketDataTick generate(CurrencyPair symbol, long now, double dtSeconds) {
         PairModel model = pairs.get(symbol);
         if (model == null) {
             throw new IllegalArgumentException("Unknown symbol: " + symbol);
@@ -170,17 +171,17 @@ public class FxPriceGenerator implements Worker {
     }
 
     private static class PairModel {
-        final String symbol;
+        final CurrencyPair symbol;
         double price, volatility, spread;
 
-        PairModel(String symbol, double price, double vol, double spr) {
+        PairModel(CurrencyPair symbol, double price, double vol, double spr) {
             this.symbol = symbol;
             this.price = price;
             this.volatility = vol;
             this.spread = spr;
         }
 
-        public String getSymbol() {
+        public CurrencyPair getSymbol() {
             return symbol;
         }
 

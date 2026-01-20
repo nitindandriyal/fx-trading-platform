@@ -8,7 +8,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.lab.model.sbe.*;
-import pub.lab.trading.common.config.AeronConfigs;
 import pub.lab.trading.common.config.AppId;
 import pub.lab.trading.common.config.EnvId;
 import pub.lab.trading.common.config.StreamId;
@@ -29,7 +28,7 @@ public class ConfigAgent implements Worker {
     private final Publication bootstrapPublication;
 
     private final MessageHeaderDecoder headerDecoder = new MessageHeaderDecoder();
-    private final CurrencyConfigMessageDecoder currencyDecoder = new CurrencyConfigMessageDecoder();
+    private final CurrencyPairConfigMessageDecoder currencyDecoder = new CurrencyPairConfigMessageDecoder();
     private final ClientTierConfigMessageDecoder clientTierDecoder = new ClientTierConfigMessageDecoder();
     private final BootstrapAckDecoder ackDecoder = new BootstrapAckDecoder();
     private final BootstrapCompleteDecoder completeDecoder = new BootstrapCompleteDecoder();
@@ -37,15 +36,13 @@ public class ConfigAgent implements Worker {
     private final UnsafeBuffer buffer = new UnsafeBuffer(new byte[4096]);
 
     private final long instanceId = ThreadLocalRandom.current().nextLong();
-    private long sessionId = 0L;                    // will be set on Ack
     private final CountDownLatch bootstrapCompleteLatch = new CountDownLatch(1);
-
     private final CurrencyConfigCache currencyConfigCache = new CurrencyConfigCache();
     private final ClientTierConfigCache clientTierConfigCache = new ClientTierConfigCache();
-
-    private volatile boolean requestSent = false;
     private final AppId appId;
     private final EnvId envId;
+    private long sessionId = 0L;                    // will be set on Ack
+    private volatile boolean requestSent = false;
 
     public ConfigAgent(Aeron aeron, AppId appId, EnvId envId) {
         this.configSubscription = aeron.addSubscription(CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
@@ -112,7 +109,7 @@ public class ConfigAgent implements Worker {
         // 2. During bootstrap: accept ALL config messages (safe because only one client bootstraps at a time)
         if (this.sessionId != 0) {
             switch (templateId) {
-                case CurrencyConfigMessageDecoder.TEMPLATE_ID -> {
+                case CurrencyPairConfigMessageDecoder.TEMPLATE_ID -> {
                     currencyDecoder.wrapAndApplyHeader(buffer, 0, headerDecoder);
                     currencyConfigCache.update(currencyDecoder);
                 }
@@ -142,8 +139,13 @@ public class ConfigAgent implements Worker {
         LOGGER.info("Bootstrap successful — quoting engine ready");
     }
 
-    public CurrencyConfigCache getCurrencyConfigCache()     { return currencyConfigCache; }
-    public ClientTierConfigCache getClientTierConfigCache() { return clientTierConfigCache; }
+    public CurrencyConfigCache getCurrencyConfigCache() {
+        return currencyConfigCache;
+    }
+
+    public ClientTierConfigCache getClientTierConfigCache() {
+        return clientTierConfigCache;
+    }
 
     @Override
     public void onClose() {

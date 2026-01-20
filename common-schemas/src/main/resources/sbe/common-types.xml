@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types>
+    <composite name="messageHeader">
+        <type name="blockLength" primitiveType="uint16"/>
+        <type name="templateId" primitiveType="uint16"/>
+        <type name="schemaId" primitiveType="uint16"/>
+        <type name="version" primitiveType="uint16"/>
+    </composite>
+
+    <composite name="groupSizeEncoding">
+        <type name="blockLength" primitiveType="uint16"/>
+        <type name="numInGroup" primitiveType="uint8"/>
+    </composite>
+
+    <enum name="BooleanEnum" encodingType="uint8">
+        <validValue name="False">0</validValue>
+        <validValue name="True">1</validValue>
+    </enum>
+
+    <enum name="Currency" encodingType="uint8">
+        <!-- Major Currencies -->
+        <validValue name="USD" value="0">0</validValue>
+        <validValue name="EUR" value="1">1</validValue>
+        <validValue name="JPY" value="2">2</validValue>
+        <validValue name="GBP" value="3">3</validValue>
+        <validValue name="AUD" value="4">4</validValue>
+        <validValue name="CAD" value="5">5</validValue>
+        <validValue name="CHF" value="6">6</validValue>
+        <validValue name="NZD" value="7">7</validValue>
+
+        <!-- Emerging Market & Exotic Currencies -->
+        <validValue name="CNH" value="8">8</validValue> <!-- Chinese Yuan (Offshore) -->
+        <validValue name="HKD" value="9">9</validValue>
+        <validValue name="SGD" value="10">10</validValue>
+        <validValue name="MXN" value="11">11</validValue>
+        <validValue name="ZAR" value="12">12</validValue>
+        <validValue name="TRY" value="13">13</validValue>
+        <validValue name="INR" value="14">14</validValue>
+        <validValue name="BRL" value="15">15</validValue>
+        <validValue name="KRW" value="16">16</validValue>
+        <validValue name="SEK" value="17">17</validValue>
+        <validValue name="NOK" value="18">18</validValue>
+        <validValue name="DKK" value="19">19</validValue>
+        <validValue name="PLN" value="20">20</validValue>
+        <validValue name="THB" value="21">21</validValue>
+        <validValue name="HUF" value="22">22</validValue>
+
+        <!-- Precious Metals (often traded as currencies) -->
+        <validValue name="XAU" value="23">23</validValue> <!-- Gold -->
+        <validValue name="XAG" value="24">24</validValue> <!-- Silver -->
+
+        <!-- Reserved for Null/Unknown -->
+        <!-- Value 255 is the default SBE null for uint8 -->
+    </enum>
+
+    <enum name="CurrencyPair" encodingType="uint8">
+        <!-- Majors (Most Liquid) -->
+        <validValue name="EURUSD" value="0">0</validValue>
+        <validValue name="USDJPY" value="1">1</validValue>
+        <validValue name="GBPUSD" value="2">2</validValue>
+        <validValue name="AUDUSD" value="3">3</validValue>
+        <validValue name="USDCAD" value="4">4</validValue>
+        <validValue name="USDCHF" value="5">5</validValue>
+        <validValue name="NZDUSD" value="6">6</validValue>
+
+        <!-- Minor Crosses (EUR & GBP Base) -->
+        <validValue name="EURGBP" value="7">7</validValue>
+        <validValue name="EURJPY" value="8">8</validValue>
+        <validValue name="EURCHF" value="9">9</validValue>
+        <validValue name="EURAUD" value="10">10</validValue>
+        <validValue name="EURCAD" value="11">11</validValue>
+        <validValue name="EURNZD" value="12">12</validValue>
+        <validValue name="GBPJPY" value="13">13</validValue>
+        <validValue name="GBPCHF" value="14">14</validValue>
+        <validValue name="GBPAUD" value="15">15</validValue>
+        <validValue name="GBPCAD" value="16">16</validValue>
+        <validValue name="GBPNZD" value="17">17</validValue>
+
+        <!-- Minor Crosses (AUD, NZD, CAD Base) -->
+        <validValue name="AUDJPY" value="18">18</validValue>
+        <validValue name="AUDCAD" value="19">19</validValue>
+        <validValue name="AUDCHF" value="20">20</validValue>
+        <validValue name="AUDNZD" value="21">21</validValue>
+        <validValue name="NZDJPY" value="22">22</validValue>
+        <validValue name="NZDCAD" value="23">23</validValue>
+        <validValue name="NZDCHF" value="24">24</validValue>
+        <validValue name="CADJPY" value="25">25</validValue>
+        <validValue name="CADCHF" value="26">26</validValue>
+        <validValue name="CHFJPY" value="27">27</validValue>
+
+        <!-- High Volume Exotics & Emerging Markets -->
+        <validValue name="USDCNH" value="28">28</validValue> <!-- Offshore Yuan -->
+        <validValue name="USDHKD" value="29">29</validValue>
+        <validValue name="USDSGD" value="30">30</validValue>
+        <validValue name="USDMXN" value="31">31</validValue>
+        <validValue name="USDZAR" value="32">32</validValue>
+        <validValue name="USDTRY" value="33">33</validValue>
+        <validValue name="USDINR" value="34">34</validValue>
+        <validValue name="USDBRL" value="35">35</validValue>
+        <validValue name="USDKRW" value="36">36</validValue>
+        <validValue name="USDSEK" value="37">37</validValue>
+        <validValue name="USDNOK" value="38">38</validValue>
+        <validValue name="USDDKK" value="39">39</validValue>
+        <validValue name="USDPLN" value="40">40</validValue>
+        <validValue name="USDTHB" value="41">41</validValue>
+
+        <!-- Euro Exotics -->
+        <validValue name="EURPLN" value="42">42</validValue>
+        <validValue name="EURTRY" value="43">43</validValue>
+        <validValue name="EURSEK" value="44">44</validValue>
+        <validValue name="EURNOK" value="45">45</validValue>
+        <validValue name="EURHUF" value="46">46</validValue>
+        <validValue name="EURZAR" value="47">47</validValue>
+
+        <!-- Commodities / Other -->
+        <validValue name="XAUUSD" value="48">48</validValue> <!-- Gold -->
+        <validValue name="XAGUSD" value="49">49</validValue> <!-- Silver -->
+    </enum>
+
+    <enum name="CryptoPair" encodingType="uint8">
+        <validValue name="BTCUSD" value="0">0</validValue>
+        <validValue name="BTCSOL" value="1">1</validValue>
+        <validValue name="BTCADA" value="2">2</validValue>
+    </enum>
+
+    <type name="string8" primitiveType="char" length="8"/>
+    <type name="string16" primitiveType="char" length="8"/>
+    <type name="string32" primitiveType="char" length="32"/>
+    <type name="string64" primitiveType="char" length="64"/>
+</types>

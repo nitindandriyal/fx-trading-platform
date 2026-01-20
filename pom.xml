@@ -8,11 +8,14 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <spring.version>6.1.14</spring.version>
-        <sbe.version>1.34.1</sbe.version>
+        <sbe.version>1.37.1</sbe.version>
     </properties>
     <version>1.0-SNAPSHOT</version>
     <name>fx-trading-platform</name>
+
     <modules>
+        <module>feed-handlers</module>
+        <module>core-pricing-engine</module>
         <module>market-data</module>
         <module>spot-pricing-engine</module>
         <module>quoting-engine</module>
@@ -21,6 +24,8 @@
         <module>commons</module>
         <module>common-schemas</module>
         <module>config-service</module>
+        <module>feed-handlers</module>
+        <module>tick-data-ingestor</module>
     </modules>
     <dependencyManagement>
         <dependencies>

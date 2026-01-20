@@ -1,6 +1,7 @@
 package pub.lab.trading.common.model.pricing;
 
 import org.agrona.DirectBuffer;
+import play.lab.model.sbe.CurrencyPair;
 import play.lab.model.sbe.QuoteMessageDecoder;
 
 import java.util.ArrayList;
@@ -17,9 +18,9 @@ public class QuoteView {
     }
 
     // Accessor for symbol (string8)
-    public int getSymbol(final Appendable value) {
+    public CurrencyPair getSymbol() {
         // Assuming string8 is a fixed-length string of 8 bytes, adjust if variable-length
-        return decoder.getSymbol(value);
+        return CurrencyPair.get(decoder.symbol().value());
     }
 
     // Accessor for priceCreationTimestamp (uint64)

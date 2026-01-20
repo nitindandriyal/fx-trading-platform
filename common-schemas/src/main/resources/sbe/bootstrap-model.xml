@@ -1,55 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2020/sbe"
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   xmlns:xi="http://www.w3.org/2001/XInclude"
                    package="play.lab.model.sbe"
-                   id="1"
-                   version="1"
                    semanticVersion="1.0"
+                   version="1"
+                   id="1"
                    description="Bootstrap messages for FX quoting engine">
 
-    <types>
-        <composite name="messageHeader">
-            <type name="blockLength" primitiveType="uint16"/>
-            <type name="templateId" primitiveType="uint16"/>
-            <type name="schemaId" primitiveType="uint16"/>
-            <type name="version" primitiveType="uint16"/>
-        </composite>
+    <xi:include href="common-types.xml"/>
 
-        <enum name="BooleanEnum" encodingType="uint8">
-            <validValue name="False" value="0">0</validValue>
-            <validValue name="True" value="1">1</validValue>
-        </enum>
+    <sbe:message name="BootstrapRequest" id="100">
+        <field name="serviceId" id="1" type="uint8"/>
+        <field name="env" id="2" type="uint8"/>
+        <field name="instanceId" id="3" type="uint64"/>
+        <field name="requestSeq" id="4" type="uint64"/>
+        <field name="timestamp" id="5" type="uint64" semanticType="UTCTimestamp"/>
+    </sbe:message>
 
-        <type name="string64" primitiveType="char" length="64"/>
-        <type name="string8" primitiveType="char" length="8"/>
-        <type name="string32" primitiveType="char" length="32"/>
+    <sbe:message name="BootstrapAck" id="101">
+        <field name="sessionId" id="1" type="uint64"/>
+        <field name="instanceId" id="2" type="uint64"/>
+        <field name="expectedTypes" id="3" type="uint16"/>
+        <field name="timestamp" id="4" type="uint64" semanticType="UTCTimestamp"/>
+    </sbe:message>
 
-        <composite name="groupSizeEncoding">
-            <type name="blockLength" primitiveType="uint16"/>
-            <type name="numInGroup" primitiveType="uint8"/>
-        </composite>
-    </types>
-
-    <!-- ====================== MESSAGES ====================== -->
-    <message name="BootstrapRequest" id="100">
-        <field name="serviceId"   id="1" type="uint8"/>
-        <field name="env"         id="2" type="uint8"/>
-        <field name="instanceId"  id="3" type="uint64"/>
-        <field name="requestSeq"  id="4" type="uint64"/>
-        <field name="timestamp"   id="5" type="uint64" semanticType="UTCTimestamp"/>
-    </message>
-
-    <message name="BootstrapAck" id="101">
-        <field name="sessionId"      id="1" type="uint64"/>
-        <field name="instanceId"     id="2" type="uint64"/>
-        <field name="expectedTypes"  id="3" type="uint16"/>
-        <field name="timestamp"      id="4" type="uint64" semanticType="UTCTimestamp"/>
-    </message>
-
-    <message name="BootstrapComplete" id="102">
-        <field name="sessionId"    id="1" type="uint64"/>
+    <sbe:message name="BootstrapComplete" id="102">
+        <field name="sessionId" id="1" type="uint64"/>
         <field name="finalVersion" id="2" type="uint64"/>
-        <field name="configCount"  id="3" type="uint32"/>
-        <field name="timestamp"    id="4" type="uint64" semanticType="UTCTimestamp"/>
-    </message>
+        <field name="configCount" id="3" type="uint32"/>
+        <field name="timestamp" id="4" type="uint64" semanticType="UTCTimestamp"/>
+    </sbe:message>
 
 </sbe:messageSchema>

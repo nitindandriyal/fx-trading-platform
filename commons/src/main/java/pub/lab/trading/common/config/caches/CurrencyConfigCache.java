@@ -4,6 +4,7 @@ import org.agrona.collections.Long2ObjectHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.lab.model.sbe.CurrencyConfigMessageDecoder;
+import play.lab.model.sbe.CurrencyPairConfigMessageDecoder;
 import pub.lab.trading.common.lifecycle.ArrayObjectPool;
 
 public class CurrencyConfigCache {
@@ -16,7 +17,7 @@ public class CurrencyConfigCache {
         return currencyCache.get(tierId);
     }
 
-    public void update(final CurrencyConfigMessageDecoder currencyDecoder) {
+    public void update(final CurrencyPairConfigMessageDecoder currencyDecoder) {
         if (currencyCache.containsKey(currencyDecoder.id())) {
             CurrencyConfig config = currencyCache.get(currencyDecoder.id()).update(
                     currencyDecoder.symbol(),

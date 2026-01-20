@@ -1,17 +1,19 @@
 package play.lab.marketdata.model;
 
+import play.lab.model.sbe.Currency;
+
 public class RawPriceConfig {
-    private final String ccy;
+    private final Currency ccy;
     private double volatility;
     private double spread;
 
-    public RawPriceConfig(String symbol, double vol, double spr) {
+    public RawPriceConfig(Currency symbol, double vol, double spr) {
         this.ccy = symbol;
         this.volatility = vol;
         this.spread = spr;
     }
 
-    public String getCcy() {
+    public Currency getCcy() {
         return ccy;
     }
 

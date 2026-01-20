@@ -1,11 +1,13 @@
 package play.lab.marketdata.model;
 
+import play.lab.model.sbe.CurrencyPair;
+
 public class MarketDataTick {
-    private String pair;
+    private CurrencyPair pair;
     private double mid, bid, ask;
     private long valueDateEpoch, timestamp;
 
-    public MarketDataTick(String pair, double mid, double bid, double ask, long valueDateEpoch, long timestamp) {
+    public MarketDataTick(CurrencyPair pair, double mid, double bid, double ask, long valueDateEpoch, long timestamp) {
         this.pair = pair;
         this.mid = mid;
         this.bid = bid;
@@ -14,11 +16,11 @@ public class MarketDataTick {
         this.timestamp = timestamp;
     }
 
-    public String getPair() {
+    public CurrencyPair getPair() {
         return pair;
     }
 
-    public void setPair(String pair) {
+    public void setPair(CurrencyPair pair) {
         this.pair = pair;
     }
 

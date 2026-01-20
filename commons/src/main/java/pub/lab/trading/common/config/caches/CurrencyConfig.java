@@ -1,19 +1,18 @@
 package pub.lab.trading.common.config.caches;
 
+import play.lab.model.sbe.CurrencyPair;
+
 import java.util.Objects;
 
 public class CurrencyConfig {
     private long id;
-    private volatile String symbol;
+    private volatile CurrencyPair symbol;
     private volatile int spotPrecision;
     private volatile int forwardPrecision;
     private volatile int amountPrecision;
 
-    public CurrencyConfig init(long id, String symbol, int spotPrecision, int forwardPrecision, int amountPrecision) {
+    public CurrencyConfig init(long id, CurrencyPair symbol, int spotPrecision, int forwardPrecision, int amountPrecision) {
         Objects.requireNonNull(symbol, "Symbol must not be null");
-        if (symbol.isEmpty()) {
-            throw new IllegalArgumentException("Symbol must not be empty");
-        }
         if (spotPrecision < 0 || forwardPrecision < 0 || amountPrecision < 0) {
             throw new IllegalArgumentException("Precisions must be non-negative");
         }
@@ -25,11 +24,8 @@ public class CurrencyConfig {
         return this;
     }
 
-    public CurrencyConfig update(String symbol, int spotPrecision, int forwardPrecision, int amountPrecision) {
+    public CurrencyConfig update(CurrencyPair symbol, int spotPrecision, int forwardPrecision, int amountPrecision) {
         Objects.requireNonNull(symbol, "Symbol must not be null");
-        if (symbol.isEmpty()) {
-            throw new IllegalArgumentException("Symbol must not be empty");
-        }
         if (spotPrecision < 0 || forwardPrecision < 0 || amountPrecision < 0) {
             throw new IllegalArgumentException("Precisions must be non-negative");
         }
@@ -44,7 +40,7 @@ public class CurrencyConfig {
         return id;
     }
 
-    public String symbol() {
+    public CurrencyPair symbol() {
         return symbol;
     }
 

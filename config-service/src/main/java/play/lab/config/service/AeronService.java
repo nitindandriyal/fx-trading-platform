@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.lab.marketdata.model.MarketDataTick;
 import play.lab.model.sbe.ClientTierConfigMessageDecoder;
+import play.lab.model.sbe.CurrencyPair;
 import play.lab.model.sbe.MessageHeaderDecoder;
 import play.lab.model.sbe.QuoteMessageDecoder;
 import pub.lab.trading.common.config.AeronConfigs;
@@ -215,7 +216,7 @@ public enum AeronService {
 
     private void consumeQuotes(DirectBuffer buf, int offset) {
         quoteView.wrap(buf, offset + MessageHeaderDecoder.ENCODED_LENGTH);
-        quoteView.getSymbol(symbolMutableString.init());
+        CurrencyPair currencyPair = quoteView.getSymbol();
         long timestamp = quoteView.priceCreationTimestamp();
         long tenor = quoteView.getTenor();
         long valueDate = quoteView.getValueDate();
@@ -234,7 +235,7 @@ public enum AeronService {
                 marketDataTick.setValueDateEpoch(valueDate);
                 marketDataTick.setTimestamp(timestamp);
             } else {
-                marketDataTick = new MarketDataTick(symbol, mid, nextRung.bid(), nextRung.ask(), valueDate, timestamp);
+                marketDataTick = new MarketDataTick(currencyPair, mid, nextRung.bid(), nextRung.ask(), valueDate, timestamp);
                 latestTicks.put(symbol, marketDataTick);
             }
         }
