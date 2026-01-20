@@ -14,14 +14,12 @@ import pub.lab.trading.common.model.Tenor;
 import pub.lab.trading.common.model.pricing.QuoteMessageWriter;
 import pub.lab.trading.common.util.MutableString;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 public class QuotePublisher {
     private static final Logger LOGGER = LoggerFactory.getLogger(QuotePublisher.class);
 
     private final QuoteMessageWriter quoteMessageWriter;
-    private final UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocateDirect(2048));
     private final Publication quotePub;
     private final ArrayObjectPool<MutableString> currencyPairObjectPool = new ArrayObjectPool<>("currencyPairObjectPool", MutableString::new);
 
@@ -50,15 +48,27 @@ public class QuotePublisher {
                             marketDataTick.getValueDateEpoch(),
                             Tenor.SPOT.getCode(),
                             ClientTierLevel.GOLD.getId(),
-                            1).
-                    addRung(
+                            1);
+            int encodedLength = quoteMessageWriter.encodedLength();
+            LOGGER.info("Preparing to publish quote for {}: bid={}, ask={}, encodedLength={}",
+                    marketDataTick.getPair(),
+                    marketDataTick.getBid(),
+                    marketDataTick.getAsk(),
+                    encodedLength
+            );
+            quoteMessageWriter.addRung(
                             marketDataTick.getBid(),
                             marketDataTick.getAsk(),
                             1_000_000
                     );
             UnsafeBuffer buffer = quoteMessageWriter.buffer();
-            int encodedLength = quoteMessageWriter.encodedLength();
-
+            encodedLength = quoteMessageWriter.encodedLength();
+            LOGGER.info("After Adding rung to publish quote for {}: bid={}, ask={}, encodedLength={}",
+                    marketDataTick.getPair(),
+                    marketDataTick.getBid(),
+                    marketDataTick.getAsk(),
+                    encodedLength
+            );
             long result = quotePub.offer(buffer, 0, encodedLength);
             if (result < 0) {
                 LOGGER.error("❌ Failed to publish quote for {} — code {}, channel: {}, streamId: {}, status: {}",

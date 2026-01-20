@@ -3,7 +3,6 @@ package pub.lab.trading.common.config.caches;
 import org.agrona.collections.Long2ObjectHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import play.lab.model.sbe.CurrencyConfigMessageDecoder;
 import play.lab.model.sbe.CurrencyPairConfigMessageDecoder;
 import pub.lab.trading.common.lifecycle.ArrayObjectPool;
 

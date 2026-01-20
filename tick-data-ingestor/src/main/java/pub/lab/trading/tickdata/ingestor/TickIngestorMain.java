@@ -10,8 +10,8 @@ public class TickIngestorMain {
         String qdbConfig = "tcp::addr=localhost:9009;";
 
         try (QuestDBWriter writer = new QuestDBWriter(qdbConfig);
-             Aeron aeron = Aeron.connect();
-             Subscription sub = aeron.addSubscription(AeronConfigs.LIVE_CHANNEL, StreamId.CLIENT_QUOTE.getCode())) {
+             Aeron aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR));
+             Subscription sub = aeron.addSubscription(AeronConfigs.LIVE_CHANNEL, StreamId.RAW_QUOTE.getCode())) {
             AeronSubscriber subscriber = new AeronSubscriber(writer);
 
             while (true) {

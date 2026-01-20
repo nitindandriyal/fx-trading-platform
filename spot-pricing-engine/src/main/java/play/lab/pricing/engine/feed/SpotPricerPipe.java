@@ -20,7 +20,6 @@ import pub.lab.trading.common.lifecycle.Worker;
 import pub.lab.trading.common.model.ClientTierLevel;
 import pub.lab.trading.common.model.pricing.QuoteMessageWriter;
 import pub.lab.trading.common.model.pricing.QuoteView;
-import pub.lab.trading.common.util.MutableString;
 
 import java.util.EnumMap;
 
@@ -101,6 +100,7 @@ public class SpotPricerPipe implements Worker {
                     }
                 }
             }
+
         }
     }
 

@@ -3,12 +3,16 @@ package pub.lab.trading.tickdata.ingestor;
 import io.aeron.logbuffer.FragmentHandler;
 import io.aeron.logbuffer.Header;
 import org.agrona.DirectBuffer;
+import play.lab.model.sbe.CurrencyPair;
+import play.lab.model.sbe.MessageHeaderDecoder;
 import play.lab.model.sbe.QuoteMessageDecoder;
+import pub.lab.trading.common.model.pricing.QuoteView;
 
 
 public class AeronSubscriber implements FragmentHandler {
     private final QuoteMessageDecoder decoder = new QuoteMessageDecoder();
     private final QuestDBWriter writer;
+    private final QuoteView quoteView = new QuoteView();
 
     public AeronSubscriber(QuestDBWriter writer) {
         this.writer = writer;
@@ -16,30 +20,25 @@ public class AeronSubscriber implements FragmentHandler {
 
     @Override
     public void onFragment(DirectBuffer buffer, int offset, int length, Header header) {
-        decoder.wrap(buffer, offset, length, 0);
+        quoteView.wrap(buffer, offset + MessageHeaderDecoder.ENCODED_LENGTH);
 
-        String symbol = decoder.symbol().name();
-        long creationTs = decoder.priceCreationTimestamp();
-        long tenor = decoder.tenor();
-        long valueDate = decoder.valueDate();
-        long tier = decoder.clientTier();
+        CurrencyPair currencyPair = quoteView.getSymbol();
+        long timestamp = quoteView.priceCreationTimestamp();
+        long tenor = quoteView.getTenor();
+        long valueDate = quoteView.getValueDate();
+        long clientTier = quoteView.getClientTier();
 
-        // Access the nested group: 'rung'
-        QuoteMessageDecoder.RungDecoder rung = decoder.rung();
         int level = 0;
-
-        while (rung.hasNext()) {
-            rung.next();
-            // Flatten: Write one QuestDB row per rung
+        while (quoteView.getRung().hasNext()) {
             writer.writeQuote(
-                    symbol,
-                    creationTs,
+                    currencyPair.name(),
+                    timestamp,
                     tenor,
                     valueDate,
-                    tier,
-                    rung.bid(),
-                    rung.ask(),
-                    rung.volume(),
+                    clientTier,
+                    quoteView.getRung().bid(),
+                    quoteView.getRung().ask(),
+                    quoteView.getRung().volume(),
                     level++
             );
         }
