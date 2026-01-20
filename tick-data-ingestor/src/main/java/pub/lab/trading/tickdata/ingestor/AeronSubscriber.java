@@ -8,9 +8,7 @@ import play.lab.model.sbe.MessageHeaderDecoder;
 import play.lab.model.sbe.QuoteMessageDecoder;
 import pub.lab.trading.common.model.pricing.QuoteView;
 
-
 public class AeronSubscriber implements FragmentHandler {
-    private final QuoteMessageDecoder decoder = new QuoteMessageDecoder();
     private final QuestDBWriter writer;
     private final QuoteView quoteView = new QuoteView();
 
@@ -30,15 +28,16 @@ public class AeronSubscriber implements FragmentHandler {
 
         int level = 0;
         while (quoteView.getRung().hasNext()) {
+            QuoteMessageDecoder.RungDecoder nextRung = quoteView.getRung().next();
             writer.writeQuote(
                     currencyPair.name(),
                     timestamp,
                     tenor,
                     valueDate,
                     clientTier,
-                    quoteView.getRung().bid(),
-                    quoteView.getRung().ask(),
-                    quoteView.getRung().volume(),
+                    nextRung.bid(),
+                    nextRung.ask(),
+                    nextRung.volume(),
                     level++
             );
         }
