@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   xmlns:xi="http://www.w3.org/2001/XInclude"
+                   package="play.lab.model.sbe"
+                   semanticVersion="1.0"
+                   version="1"
+                   id="1">
+    <xi:include href="common-types.xml"/>
+
+    <types>
+        <type name="Price" primitiveType="int64"/>
+        <type name="Quantity" primitiveType="int64"/>
+        <type name="Timestamp" primitiveType="int64" description="Nanos since epoch"/>
+
+        <enum name="VenueID" encodingType="uint8">
+            <validValue name="EBS">1</validValue>
+            <validValue name="REUTERS">2</validValue>
+            <validValue name="CURRENEX">3</validValue>
+        </enum>
+    </types>
+
+    <sbe:message name="VenueTick" id="1" description="Raw normalized update from a single venue">
+        <field name="venueId" id="1" type="VenueID"/>
+        <field name="securityId" id="2" type="uint32"/>
+        <field name="venueSeqNum" id="3" type="uint64"/>
+        <field name="venueTime" id="4" type="Timestamp"/>
+        <field name="ingressTime" id="5" type="Timestamp"/>
+        <field name="bidPrice" id="6" type="Price"/>
+        <field name="bidSize" id="7" type="Quantity"/>
+        <field name="askPrice" id="8" type="Price"/>
+        <field name="askSize" id="9" type="Quantity"/>
+    </sbe:message>
+
+    <sbe:message name="GoldenTick" id="2" description="Aggregated best bid/offer across all venues">
+        <field name="globalSeqNum" id="1" type="uint64"/>
+        <field name="securityId" id="2" type="uint32"/>
+        <field name="bestBidPrice" id="3" type="Price"/>
+        <field name="bestBidVenue" id="4" type="VenueID"/>
+        <field name="bestAskPrice" id="5" type="Price"/>
+        <field name="bestAskVenue" id="6" type="VenueID"/>
+        <field name="tpTimestamp" id="7" type="Timestamp" description="Ticker Plant Processing Time"/>
+    </sbe:message>
+
+    <sbe:message name="OrderBookSnapshot" id="3" description="Full depth snapshot of the aggregated book">
+        <field name="securityId" id="1" type="uint32"/>
+        <field name="lastUpdateId" id="2" type="uint64"/>
+
+        <group name="bidLevels" id="3" dimensionType="groupSizeEncoding">
+            <field name="price" id="1" type="Price"/>
+            <field name="totalSize" id="2" type="Quantity"/>
+            <field name="venueCount" id="3" type="uint8"/>
+        </group>
+
+        <group name="askLevels" id="4" dimensionType="groupSizeEncoding">
+            <field name="price" id="1" type="Price"/>
+            <field name="totalSize" id="2" type="Quantity"/>
+            <field name="venueCount" id="3" type="uint8"/>
+        </group>
+    </sbe:message>
+
+</sbe:messageSchema>

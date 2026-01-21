@@ -36,6 +36,7 @@
         <module>common-schemas</module>
         <module>config-service</module>
         <module>tick-data-ingestor</module>
+        <module>ticker-plant</module>
     </modules>
     <dependencyManagement>
         <dependencies>

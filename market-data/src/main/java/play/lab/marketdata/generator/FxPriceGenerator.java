@@ -8,6 +8,7 @@ import play.lab.marketdata.model.RawPriceConfig;
 import play.lab.model.sbe.Currency;
 import play.lab.model.sbe.CurrencyPair;
 import pub.lab.trading.common.lifecycle.Worker;
+import pub.lab.trading.common.util.CachedClock;
 import pub.lab.trading.common.util.CurrencyMapper;
 import pub.lab.trading.common.util.HolidayCalendar;
 
@@ -24,13 +25,15 @@ public class FxPriceGenerator implements Worker {
 
     private static final double DEFAULT_SPREAD_BP = 0.5;
     private static final double DEFAULT_VOLATILITY = 0.5;
+    private final CachedClock cachedClock;
     private final Map<CurrencyPair, PairModel> pairs = new HashMap<>();
     private final Map<Currency, RawPriceConfig> configOverridesByCcy = new ConcurrentHashMap<>();
     private final RawPriceConfig defaultConfig = new RawPriceConfig(Currency.NULL_VAL, DEFAULT_VOLATILITY, DEFAULT_SPREAD_BP);
     private final QuotePublisher aeronPub = new QuotePublisher();
     private final TickThrottle throttle = new TickThrottle(1000);
 
-    public FxPriceGenerator() {
+    public FxPriceGenerator(final CachedClock cachedClock) {
+        this.cachedClock = cachedClock;
         // Volatility overrides (annualized)
         configOverridesByCcy.put(Currency.USD, new RawPriceConfig(Currency.USD, 0.020, 0.5)); // US Dollar
         configOverridesByCcy.put(Currency.EUR, new RawPriceConfig(Currency.EUR, 0.018, 0.5)); // Euro
@@ -164,7 +167,7 @@ public class FxPriceGenerator implements Worker {
 
     @Override
     public int doWork() {
-        generateAll(System.nanoTime(), throttle.getDtSeconds());
+        generateAll(cachedClock.nanoTime(), throttle.getDtSeconds());
         return 1;
     }
 

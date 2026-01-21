@@ -5,6 +5,7 @@ import org.agrona.concurrent.BackoffIdleStrategy;
 import play.lab.marketdata.generator.FxPriceGenerator;
 import pub.lab.trading.common.lifecycle.MultiStreamPoller;
 import pub.lab.trading.common.lifecycle.Worker;
+import pub.lab.trading.common.util.CachedClock;
 
 public class MarketDataAppLauncher {
 
@@ -15,7 +16,7 @@ public class MarketDataAppLauncher {
                 new MultiStreamPoller(
                         "pricing-engine-poller",
                         new Worker[]{
-                                new FxPriceGenerator()
+                                new FxPriceGenerator(new CachedClock())
                         }
                 ));
         AgentRunner.startOnThread(agentRunner);

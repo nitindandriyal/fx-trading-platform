@@ -52,6 +52,7 @@
                             <arguments>
                                 <argument>${project.basedir}/src/main/resources/sbe/bootstrap-model.xml</argument>
                                 <argument>${project.basedir}/src/main/resources/sbe/config-model.xml</argument>
+                                <argument>${project.basedir}/src/main/resources/sbe/market-data-model.xml</argument>
                                 <argument>${project.basedir}/src/main/resources/sbe/trading-model.xml</argument>
                             </arguments>
                             <systemProperties>
