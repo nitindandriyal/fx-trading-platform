@@ -25,10 +25,10 @@ public class AeronSubscriber implements FragmentHandler {
         long tenor = quoteView.getTenor();
         long valueDate = quoteView.getValueDate();
         long clientTier = quoteView.getClientTier();
-
+        QuoteMessageDecoder.RungDecoder rungDecoder = quoteView.getRung();
         int level = 0;
-        while (quoteView.getRung().hasNext()) {
-            QuoteMessageDecoder.RungDecoder nextRung = quoteView.getRung().next();
+        while (rungDecoder.hasNext()) {
+            QuoteMessageDecoder.RungDecoder nextRung = rungDecoder.next();
             writer.writeQuote(
                     currencyPair.name(),
                     timestamp,

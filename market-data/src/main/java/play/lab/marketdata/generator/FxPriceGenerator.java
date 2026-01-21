@@ -1,6 +1,4 @@
-// simplified for brevity
 package play.lab.marketdata.generator;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +11,11 @@ import pub.lab.trading.common.lifecycle.Worker;
 import pub.lab.trading.common.util.CurrencyMapper;
 import pub.lab.trading.common.util.HolidayCalendar;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -154,6 +156,7 @@ public class FxPriceGenerator implements Worker {
     public MarketDataTick generate(CurrencyPair symbol, long now, double dtSeconds) {
         PairModel model = pairs.get(symbol);
         if (model == null) {
+            LOGGER.warn("Unknown symbol requested: {}", symbol);
             throw new IllegalArgumentException("Unknown symbol: " + symbol);
         }
         return model.nextTick(now, dtSeconds);
@@ -213,7 +216,13 @@ public class FxPriceGenerator implements Worker {
             double z = ThreadLocalRandom.current().nextGaussian();
             price *= Math.exp(-0.5 * volatility * volatility * dt + volatility * Math.sqrt(dt) * z);
             double spread = price * this.spread / 10000;
-            return new MarketDataTick(symbol, price, (price - spread) * 0.5, (price + spread) * 0.5, HolidayCalendar.getValueDate(), now);
+            return new MarketDataTick(symbol,
+                    price,
+                    Math.abs(price - spread) * 0.5,
+                    Math.abs(price + spread) * 0.5,
+                    HolidayCalendar.getValueDate(),
+                    now
+            );
         }
     }
 }

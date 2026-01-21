@@ -43,12 +43,12 @@ public class QuotePublisher {
     void publish(final MarketDataTick marketDataTick) {
         try {
             quoteMessageWriter.beginQuote(
-                            marketDataTick.getPair(),
-                            marketDataTick.getValueDateEpoch(),
-                            marketDataTick.getValueDateEpoch(),
-                            Tenor.SPOT.getCode(),
-                            ClientTierLevel.GOLD.getId(),
-                            1);
+                    marketDataTick.getPair(),
+                    marketDataTick.getValueDateEpoch(),
+                    marketDataTick.getValueDateEpoch(),
+                    Tenor.SPOT.getCode(),
+                    ClientTierLevel.GOLD.getId(),
+                    1);
             int encodedLength = quoteMessageWriter.encodedLength();
             LOGGER.info("Preparing to publish quote for {}: bid={}, ask={}, encodedLength={}",
                     marketDataTick.getPair(),
@@ -57,10 +57,10 @@ public class QuotePublisher {
                     encodedLength
             );
             quoteMessageWriter.addRung(
-                            marketDataTick.getBid(),
-                            marketDataTick.getAsk(),
-                            1_000_000
-                    );
+                    marketDataTick.getBid(),
+                    marketDataTick.getAsk(),
+                    1_000_000
+            );
             UnsafeBuffer buffer = quoteMessageWriter.buffer();
             encodedLength = quoteMessageWriter.encodedLength();
             LOGGER.info("After Adding rung to publish quote for {}: bid={}, ask={}, encodedLength={}",

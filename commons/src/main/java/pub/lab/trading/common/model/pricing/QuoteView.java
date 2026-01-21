@@ -48,7 +48,7 @@ public class QuoteView {
         List<Rung> rungs = new ArrayList<>();
         QuoteMessageDecoder.RungDecoder rungDecoder = decoder.rung();
         while (rungDecoder.hasNext()) {
-            rungDecoder = rungDecoder.next();
+            rungDecoder.next();
             rungs.add(new Rung(rungDecoder.bid(), rungDecoder.ask(), rungDecoder.volume()));
         }
         return rungs;
@@ -81,6 +81,15 @@ public class QuoteView {
 
         public double getVolume() {
             return volume;
+        }
+
+        @Override
+        public String toString() {
+            return "Rung{" +
+                    "bid=" + bid +
+                    ", ask=" + ask +
+                    ", volume=" + volume +
+                    '}';
         }
     }
 

@@ -4,6 +4,7 @@ import io.aeron.Aeron;
 import io.aeron.Subscription;
 import pub.lab.trading.common.config.AeronConfigs;
 import pub.lab.trading.common.config.StreamId;
+import pub.lab.trading.common.model.ClientTierLevel;
 
 public class TickIngestorMain {
     public static void main(String[] args) {
@@ -11,7 +12,7 @@ public class TickIngestorMain {
 
         try (QuestDBWriter writer = new QuestDBWriter(qdbConfig);
              Aeron aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR));
-             Subscription sub = aeron.addSubscription(AeronConfigs.LIVE_CHANNEL, StreamId.RAW_QUOTE.getCode())) {
+             Subscription sub = aeron.addSubscription(AeronConfigs.LIVE_CHANNEL, StreamId.MARKET_QUOTE.getCode() + ClientTierLevel.GOLD.getId())) {
             AeronSubscriber subscriber = new AeronSubscriber(writer);
 
             while (true) {

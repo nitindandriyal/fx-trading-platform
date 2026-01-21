@@ -53,54 +53,55 @@ public class SpotPricerPipe implements Worker {
 
     private void consumeQuotes(DirectBuffer buf, int offset) {
         quoteView.wrap(buf, offset + MessageHeaderDecoder.ENCODED_LENGTH);
-
         CurrencyPair currencyPair = quoteView.getSymbol();
         long timestamp = quoteView.priceCreationTimestamp();
         long tenor = quoteView.getTenor();
         long valueDate = quoteView.getValueDate();
         long clientTier = quoteView.getClientTier();
-
-        for (ClientTierLevel clientTierLevel : ClientTierLevel.values()) {
-            double volume = 1_000_000.0;
-            while (quoteView.getRung().hasNext()) {
+        QuoteMessageDecoder.RungDecoder rungDecoder = quoteView.getRung();
+        while (rungDecoder.hasNext()) {
+            QuoteMessageDecoder.RungDecoder nextRung = rungDecoder.next();
+            for (ClientTierLevel clientTierLevel : ClientTierLevel.values()) {
+                double volume = 1_000_000.0;
                 ClientTierConfig clientTierConfig = clientTierConfigCache.get(clientTierLevel.getId());
+                double volFactor = Math.log10(nextRung.volume() / volume + 1.0);
+                double spreadAdjust = 0.0; // default
+                double adjustment = 0.0;
                 if (null != clientTierConfig) {
-                    QuoteMessageDecoder.RungDecoder nextRung = quoteView.getRung().next();
-                    double mid = (nextRung.bid() + nextRung.ask()) / 2.0;
-                    double volFactor = Math.log10(nextRung.volume() / volume + 1.0);
-                    double spreadAdjust = clientTierConfig.spreadTighteningFactor() * (1 + 0.05 * volFactor);
+                    spreadAdjust = clientTierConfig.spreadTighteningFactor() * (1 + 0.05 * volFactor);
                     double markupAdjust = clientTierConfig.markupBps() * (1 + 0.1 * volFactor);
                     double skewAdjust = clientTierConfig.tierSkew() * volFactor;
-                    double adjustment = clientTierConfig.signal() * (markupAdjust + skewAdjust);
-                    double bid = mid - (spreadAdjust / 2.0) - adjustment;
-                    double ask = mid + (spreadAdjust / 2.0) + adjustment;
+                    adjustment = clientTierConfig.signal() * (markupAdjust + skewAdjust);
+                }
+                double mid = 0.5 * (nextRung.bid() + nextRung.ask());
+                double bid = mid - (spreadAdjust * 0.5) - adjustment;
+                double ask = mid + (spreadAdjust * 0.5) + adjustment;
 
-                    LOGGER.info("symbol={}, timestamp={}, tenor={}, valueDate={}, clientTier={}, bid={}, ask={}",
-                            currencyPair, timestamp, tenor, valueDate, clientTier, bid, ask);
-                    quoteMessageWriter.beginQuote(
-                            currencyPair,
-                            valueDate,
-                            timestamp,
-                            tenor,
-                            clientTier,
-                            1
-                    ).addRung(
-                            bid,
-                            ask,
-                            volume
-                    );
-                    UnsafeBuffer buffer = quoteMessageWriter.buffer();
-                    int encodedLength = quoteMessageWriter.encodedLength();
+                LOGGER.info("symbol={}, timestamp={}, tenor={}, valueDate={}, clientTier={}, bid={}, ask={}",
+                        currencyPair, timestamp, tenor, valueDate, clientTier, bid, ask);
+                quoteMessageWriter.beginQuote(
+                        currencyPair,
+                        valueDate,
+                        timestamp,
+                        tenor,
+                        clientTier,
+                        1
+                ).addRung(
+                        bid,
+                        ask,
+                        volume
+                );
+                UnsafeBuffer buffer = quoteMessageWriter.buffer();
+                int encodedLength = quoteMessageWriter.encodedLength();
 
-                    long result = marketQuotePublications.get(clientTierLevel).offer(buffer, 0, encodedLength);
-                    if (result < 0) {
-                        LOGGER.error("❌ Failed to publish quote");
-                    } else {
-                        LOGGER.info("✅ Published quote for");
-                    }
+                long result = marketQuotePublications.get(clientTierLevel).offer(buffer, 0, encodedLength);
+
+                if (result < 0) {
+                    LOGGER.error("❌ Failed to publish quote to {} : reason {}", marketQuotePublications.get(clientTierLevel), result);
+                } else {
+                    LOGGER.info("✅ Published quote for");
                 }
             }
-
         }
     }
 
