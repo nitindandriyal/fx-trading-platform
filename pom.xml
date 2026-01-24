@@ -15,7 +15,7 @@
 
         <!-- Third-party dependencies -->
         <sbe.version>1.37.1</sbe.version>
-        <aeron.version>1.47.4</aeron.version>
+        <aeron.version>1.50.0</aeron.version>
         <disruptor.version>3.4.4</disruptor.version>
         <chronicle-core.version>2.24ea7</chronicle-core.version>
         <slf4j.version>2.0.16</slf4j.version>

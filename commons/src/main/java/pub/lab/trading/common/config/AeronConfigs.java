@@ -9,7 +9,7 @@ public class AeronConfigs {
     public static final String CONTROL_REQUEST_CHANNEL = "aeron:udp?endpoint=localhost:18010";
     public static final String CONTROL_RESPONSE_CHANNEL = "aeron:udp?endpoint=localhost:0";
     public static final String LIVE_CHANNEL = "aeron:ipc";
-    public static final String CONFIG_CHANNEL = "aeron:ipc?endpoint=config-service";
+    public static final String CONFIG_CHANNEL = "aeron:ipc";
     public static final String BOOTSTRAP_CHANNEL = "aeron:ipc?endpoint=bootstrap-service";
 
     private AeronConfigs() {

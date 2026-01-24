@@ -8,7 +8,6 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.4.3</version>
-        <relativePath/>
     </parent>
 
     <groupId>pub.lab.trading</groupId>
@@ -18,7 +17,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <vaadin.version>24.7.3</vaadin.version>
-        <aeron.version>1.47.4</aeron.version>
+        <aeron.version>1.50.0</aeron.version>
         <vaadin.frontend.frontend.folder>${project.basedir}/src/main/frontend</vaadin.frontend.frontend.folder>
     </properties>
 

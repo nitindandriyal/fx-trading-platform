@@ -5,6 +5,8 @@ import io.aeron.archive.ArchiveThreadingMode;
 import io.aeron.archive.ArchivingMediaDriver;
 import io.aeron.driver.MediaDriver;
 import io.aeron.driver.ThreadingMode;
+import org.agrona.CloseHelper;
+import org.agrona.MarkFile;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,12 +28,15 @@ public class StandaloneArchivingMediaDriver {
         MediaDriver.Context mediaDriverContext = new MediaDriver.Context()
                 .aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR)
                 .threadingMode(ThreadingMode.DEDICATED)
+                .spiesSimulateConnection(true)
+                .dirDeleteOnStart(true)
                 .warnIfDirectoryExists(true)
                 .termBufferSparseFile(true); // for Windows compatibility
 
         Archive.Context archiveContext = new Archive.Context()
                 .archiveDir(new File(AeronConfigs.AERON_ARCHIVE_DIR)) // Set directory for archive recordings
                 .threadingMode(ArchiveThreadingMode.SHARED)
+                .deleteArchiveOnStart(true)
                 .controlChannel(AeronConfigs.CONTROL_REQUEST_CHANNEL) // IPC channel for archive control requests
                 .replicationChannel(AeronConfigs.LIVE_CHANNEL); // IPC channel for archive replication
 
@@ -43,7 +48,7 @@ public class StandaloneArchivingMediaDriver {
             LOGGER.info("📡 MediaDriver running. Ctrl+C to terminate...");
             barrier.await();
             LOGGER.info("🛑 Shutting down MediaDriver...");
-            archive.close();
+            CloseHelper.quietClose(archive);
             LOGGER.info("✅ MediaDriver shutdown complete.");
         }
     }
