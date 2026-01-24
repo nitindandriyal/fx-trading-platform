@@ -1,19 +1,14 @@
 package play.lab.config.service;
 
 import io.aeron.Aeron;
-import io.aeron.ChannelUri;
 import io.aeron.ExclusivePublication;
-import io.aeron.Publication;
 import io.aeron.Subscription;
 import io.aeron.archive.client.AeronArchive;
 import io.aeron.archive.client.RecordingDescriptorConsumer;
-import io.aeron.archive.client.ReplayMerge;
 import io.aeron.archive.codecs.SourceLocation;
 import org.agrona.DirectBuffer;
-import org.agrona.collections.MutableLong;
 import org.agrona.concurrent.NoOpIdleStrategy;
 import org.agrona.concurrent.OneToOneConcurrentArrayQueue;
-import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +28,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static io.aeron.archive.client.AeronArchive.NULL_POSITION;
 import static pub.lab.trading.common.config.AeronConfigs.CONFIG_CHANNEL;
 import static pub.lab.trading.common.config.AeronConfigs.CONTROL_REQUEST_CHANNEL;
 import static pub.lab.trading.common.config.AeronConfigs.CONTROL_RESPONSE_CHANNEL;
@@ -50,7 +44,10 @@ public enum AeronService {
 
     private final List<Recording> recordings = new ArrayList<>();
 
-    private record Recording(long recordingId, long startPosition, long stopPosition) {};
+    private record Recording(long recordingId, long startPosition, long stopPosition) {
+    }
+
+    ;
 
     public void sendTier(int tierId, String tierName, double markupBps, double spreadTighteningFactor,
                          long quoteThrottleMs, long latencyProtectionMs, long quoteExpiryMs,
@@ -99,9 +96,9 @@ public enum AeronService {
         publication = aeron.addExclusivePublication(AeronConfigs.CONFIG_CHANNEL,
                 StreamId.CONFIG_STREAM.getCode()
         );
-        findLatestRecording(archive, CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
-        long liveRecordingId = findLatestRecording(archive, CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
-        for(Recording recording : recordings) {
+
+        long liveRecordingId = extractArchivedAndLiveRecordings(archive, CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
+        for (Recording recording : recordings) {
             LOGGER.info("Recording found: {}", recording);
             if (recording.stopPosition == AeronArchive.NULL_POSITION) {
                 liveRecordingId = recording.recordingId;
@@ -119,7 +116,7 @@ public enum AeronService {
             archive.startRecording(AeronConfigs.CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode(), SourceLocation.LOCAL);
         }
 
-        while (!subscription.isConnected())            {
+        while (!subscription.isConnected()) {
             new NoOpIdleStrategy().idle();
         }
         LOGGER.info("Subscription connected to {} on stream {}", subscription.channel(), subscription.streamId());
@@ -179,7 +176,7 @@ public enum AeronService {
         }
     }
 
-    private long findLatestRecording(final AeronArchive archive, String channel, int stream) {
+    private long extractArchivedAndLiveRecordings(final AeronArchive archive, final String channel, final int stream) {
         AtomicLong lastRecordingId = new AtomicLong(-1L);
         recordings.clear();
         final RecordingDescriptorConsumer consumer =
@@ -189,7 +186,7 @@ public enum AeronService {
                  termBufferLength, mtuLength, sessionId,
                  streamId, strippedChannel, originalChannel,
                  sourceIdentity) -> {
-                    LOGGER.info("Found recordingId {} sessionId {} streamId {} channel {} POS : {}->{} ",recordingId, sessionId, streamId, channel, startPosition, stopPosition);
+                    LOGGER.info("Found recordingId {} sessionId {} streamId {} channel {} POS : {}->{} ", recordingId, sessionId, streamId, channel, startPosition, stopPosition);
                     recordings.add(new Recording(recordingId, startPosition, stopPosition));
                     lastRecordingId.set(recordingId);
                 };
