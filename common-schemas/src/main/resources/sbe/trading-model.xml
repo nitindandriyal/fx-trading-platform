@@ -7,17 +7,130 @@
                    id="1">
     <xi:include href="common-types.xml"/>
 
-    <sbe:message name="QuoteMessage" id="2">
-        <field name="symbol" id="1" type="CurrencyPair"/>
-        <field name="priceCreationTimestamp" id="2" type="uint64"/>
-        <field name="tenor" id="3" type="uint32"/>
-        <field name="valueDate" id="4" type="uint64"/>
-        <field name="clientTier" id="5" type="uint32"/>
-        <group name="rung" id="6"
-               description="Bid, Ask, and Volume for each price level">
-            <field name="bid" id="601" type="double" description="Bid price"/>
-            <field name="ask" id="602" type="double" description="Ask price"/>
-            <field name="volume" id="603" type="double" description="Volume/lot size"/>
-        </group>
+    <types>
+
+        <enum name="Side" encodingType="uint8">
+            <validValue name="BUY">1</validValue>
+            <validValue name="SELL">2</validValue>
+        </enum>
+
+        <enum name="OrdType" encodingType="uint8">
+            <validValue name="MARKET">1</validValue>
+            <validValue name="LIMIT">2</validValue>
+            <validValue name="IOC">3</validValue>
+            <validValue name="FOK">4</validValue>
+        </enum>
+
+        <enum name="TimeInForce" encodingType="uint8">
+            <validValue name="DAY">0</validValue>
+            <validValue name="IOC">1</validValue>
+            <validValue name="FOK">2</validValue>
+        </enum>
+
+        <enum name="RiskDecision" encodingType="uint8">
+            <validValue name="ACCEPT">1</validValue>
+            <validValue name="REJECT">2</validValue>
+        </enum>
+
+        <enum name="ExecType" encodingType="uint8">
+            <validValue name="ACK">1</validValue>
+            <validValue name="REJECT">2</validValue>
+            <validValue name="FILL">3</validValue>
+            <validValue name="PARTIAL_FILL">4</validValue>
+            <validValue name="CANCELLED">5</validValue>
+        </enum>
+
+        <type name="ClientId" primitiveType="uint32"/>
+        <type name="OrderId" primitiveType="uint64"/>
+        <type name="ClOrdId" primitiveType="uint64"/>
+        <type name="InstrumentId" primitiveType="uint32"/>
+        <type name="Price" primitiveType="int64" semanticType="price" description="Scaled price (e.g. 1e5 or 1e6)"/>
+        <type name="Qty" primitiveType="int64" semanticType="qty" description="Scaled qty (base units * scale)"/>
+        <type name="EpochNanos" primitiveType="uint64"/>
+    </types>
+    <!-- Pre-trade intent -->
+    <sbe:message name="OrderIntent" id="1">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="clientId" id="2" type="ClientId"/>
+        <field name="clOrdId" id="3" type="ClOrdId"/>
+        <field name="instrumentId" id="4" type="InstrumentId"/>
+        <field name="side" id="5" type="Side"/>
+        <field name="ordType" id="6" type="OrdType"/>
+        <field name="tif" id="7" type="TimeInForce"/>
+        <field name="price" id="8" type="Price"/>
+        <field name="qty" id="9" type="Qty"/>
+        <field name="maxSlippage" id="10" type="Price"/>
+    </sbe:message>
+
+    <sbe:message name="RiskResult" id="2">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="clientId" id="2" type="ClientId"/>
+        <field name="clOrdId" id="3" type="ClOrdId"/>
+        <field name="decision" id="4" type="RiskDecision"/>
+        <field name="reasonCode" id="5" type="uint16"/>
+        <field name="reason" id="6" type="uint8" semanticType="string" length="64"/>
+    </sbe:message>
+
+    <!-- OMS accepted order -->
+    <sbe:message name="OrderAccepted" id="3">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="clientId" id="2" type="ClientId"/>
+        <field name="clOrdId" id="3" type="ClOrdId"/>
+        <field name="orderId" id="4" type="OrderId"/>
+        <field name="instrumentId" id="5" type="InstrumentId"/>
+        <field name="side" id="6" type="Side"/>
+        <field name="ordType" id="7" type="OrdType"/>
+        <field name="price" id="8" type="Price"/>
+        <field name="qty" id="9" type="Qty"/>
+    </sbe:message>
+
+    <!-- Router child order -->
+    <sbe:message name="ChildOrder" id="4">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="orderId" id="2" type="OrderId"/>
+        <field name="childClOrdId" id="3" type="ClOrdId"/>
+        <field name="instrumentId" id="4" type="InstrumentId"/>
+        <field name="side" id="5" type="Side"/>
+        <field name="ordType" id="6" type="OrdType"/>
+        <field name="price" id="7" type="Price"/>
+        <field name="qty" id="8" type="Qty"/>
+        <field name="venueId" id="9" type="uint16"/>
+    </sbe:message>
+
+    <!-- Normalized execution report -->
+    <sbe:message name="ExecutionReport" id="5">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="orderId" id="2" type="OrderId"/>
+        <field name="clOrdId" id="3" type="ClOrdId"/>
+        <field name="execType" id="4" type="ExecType"/>
+        <field name="filledQty" id="5" type="Qty"/>
+        <field name="fillPrice" id="6" type="Price"/>
+        <field name="leavesQty" id="7" type="Qty"/>
+        <field name="venueId" id="8" type="uint16"/>
+        <field name="text" id="9" type="uint8" semanticType="string" length="64"/>
+    </sbe:message>
+
+    <!-- Position updates -->
+    <sbe:message name="ExposureDelta" id="6">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="instrumentId" id="2" type="InstrumentId"/>
+        <field name="baseCcyExposure" id="3" type="int64" description="Scaled base exposure"/>
+        <field name="quoteCcyExposure" id="4" type="int64" description="Scaled quote exposure"/>
+    </sbe:message>
+
+    <sbe:message name="HedgeRequest" id="7">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="instrumentId" id="2" type="InstrumentId"/>
+        <field name="side" id="3" type="Side"/>
+        <field name="qty" id="4" type="Qty"/>
+        <field name="urgency" id="5" type="uint8"/>
+    </sbe:message>
+
+    <sbe:message name="RoutingDecision" id="8">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="orderId" id="2" type="OrderId"/>
+        <field name="venueId" id="3" type="uint16"/>
+        <field name="score" id="4" type="int32"/>
+        <field name="reason" id="5" type="uint8" semanticType="string" length="64"/>
     </sbe:message>
 </sbe:messageSchema>

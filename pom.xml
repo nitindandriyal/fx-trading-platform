@@ -37,6 +37,11 @@
         <module>config-service</module>
         <module>tick-data-ingestor</module>
         <module>ticker-plant</module>
+        <module>oms-core</module>
+        <module>smart-order-router</module>
+        <module>hedging-engine</module>
+        <module>position-service</module>
+        <module>replay-simulator</module>
     </modules>
     <dependencyManagement>
         <dependencies>
