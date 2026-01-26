@@ -58,7 +58,7 @@
         </group>
     </sbe:message>
 
-    <sbe:message name="QuoteMessage" id="4">
+    <sbe:message name="QuoteMessage" id="4" description="Multi-level FX quote message">
         <field name="symbol" id="1" type="CurrencyPair"/>
         <field name="priceCreationTimestamp" id="2" type="uint64"/>
         <field name="tenor" id="3" type="uint32"/>
@@ -70,6 +70,18 @@
             <field name="ask" id="602" type="double" description="Ask price"/>
             <field name="volume" id="603" type="double" description="Volume/lot size"/>
         </group>
+    </sbe:message>
+
+    <sbe:message name="MarketTick" id="5" description="Single level FX market tick message">
+        <field name="symbol" id="1" type="CurrencyPair"/>
+        <field name="priceCreationTimestamp" id="2" type="uint64"/>
+        <field name="tenor" id="3" type="uint32"/>
+        <field name="valueDate" id="4" type="uint64"/>
+        <field name="clientTier" id="5" type="uint32"/>
+        <field name="bid" id="6" type="double" description="Bid price"/>
+        <field name="ask" id="7" type="double" description="Ask price"/>
+        <field name="volume" id="8" type="double" description="Volume/lot size"/>
+        <field name="level" id="9" type="uint8" description="Price level"/>
     </sbe:message>
 
 </sbe:messageSchema>
