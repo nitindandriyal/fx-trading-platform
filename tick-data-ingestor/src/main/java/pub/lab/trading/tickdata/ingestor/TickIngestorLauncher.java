@@ -2,6 +2,7 @@ package pub.lab.trading.tickdata.ingestor;
 
 import org.agrona.concurrent.AgentRunner;
 import org.agrona.concurrent.BackoffIdleStrategy;
+import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pub.lab.trading.common.lifecycle.MultiStreamPoller;
@@ -12,22 +13,28 @@ public class TickIngestorLauncher {
 
     public static void main(String[] args) {
         String questDbConfig = "tcp::addr=localhost:9009;";
+        LOGGER.info("Application Starting Up");
+        try (
+                QuestDBWriter writer = new QuestDBWriter(questDbConfig);
+                AeronSubscriber subscriber = new AeronSubscriber(writer);
+                AgentRunner agentRunner = new AgentRunner(new BackoffIdleStrategy(),
+                        Throwable::printStackTrace,
+                        null,
+                        new MultiStreamPoller(
+                                "tick-ingestion-poller",
+                                new Worker[]{
+                                        subscriber,
+                                        writer
+                                }
+                        ));
+                var barrier = new ShutdownSignalBarrier()
+        ) {
+            AgentRunner.startOnThread(agentRunner);
+            LOGGER.info("Started {}", agentRunner.agent());
+            barrier.await();
+            LOGGER.info("Shutting down {}", agentRunner.agent());
+        }
 
-        QuestDBWriter writer = new QuestDBWriter(questDbConfig);
-        AeronSubscriber subscriber = new AeronSubscriber(writer);
-
-        AgentRunner agentRunner = new AgentRunner(new BackoffIdleStrategy(),
-                Throwable::printStackTrace,
-                null,
-                new MultiStreamPoller(
-                        "tick-ingestion-poller",
-                        new Worker[]{
-                                subscriber,
-                                writer
-                        }
-                ));
-        AgentRunner.startOnThread(agentRunner);
-        LOGGER.info("Started {}", agentRunner.agent());
-
+        LOGGER.info("Application Stopped");
     }
 }

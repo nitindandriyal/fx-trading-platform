@@ -6,7 +6,6 @@ import io.aeron.archive.ArchivingMediaDriver;
 import io.aeron.driver.MediaDriver;
 import io.aeron.driver.ThreadingMode;
 import org.agrona.CloseHelper;
-import org.agrona.MarkFile;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +39,10 @@ public class StandaloneArchivingMediaDriver {
                 .controlChannel(AeronConfigs.CONTROL_REQUEST_CHANNEL) // IPC channel for archive control requests
                 .replicationChannel(AeronConfigs.LIVE_CHANNEL); // IPC channel for archive replication
 
-        final ShutdownSignalBarrier barrier = new ShutdownSignalBarrier();
-        try (ArchivingMediaDriver archive = ArchivingMediaDriver.launch(mediaDriverContext, archiveContext)) {
+        try (
+                ArchivingMediaDriver archive = ArchivingMediaDriver.launch(mediaDriverContext, archiveContext);
+                ShutdownSignalBarrier barrier = new ShutdownSignalBarrier()
+        ) {
             LOGGER.info("🚀 Launching Aeron MediaDriver: {} {}", mediaDriverContext.aeronDirectory(), archiveContext.aeronDirectoryName());
             LOGGER.info("📡 Archive Control Channel: {}", archiveContext.controlChannel());
             LOGGER.info("🔁 Replication Channel: {}", archiveContext.replicationChannel());

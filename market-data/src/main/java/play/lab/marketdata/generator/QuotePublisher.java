@@ -21,7 +21,6 @@ public class QuotePublisher {
 
     private final QuoteMessageWriter quoteMessageWriter;
     private final Publication quotePub;
-    private final ArrayObjectPool<MutableString> currencyPairObjectPool = new ArrayObjectPool<>("currencyPairObjectPool", MutableString::new);
 
     QuotePublisher() {
         Aeron aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR));
@@ -63,7 +62,7 @@ public class QuotePublisher {
             );
             UnsafeBuffer buffer = quoteMessageWriter.buffer();
             encodedLength = quoteMessageWriter.encodedLength();
-            LOGGER.info("After Adding rung to publish quote for {}: bid={}, ask={}, encodedLength={}",
+            LOGGER.debug("After Adding rung to publish quote for {}: bid={}, ask={}, encodedLength={}",
                     marketDataTick.getPair(),
                     marketDataTick.getBid(),
                     marketDataTick.getAsk(),
@@ -74,7 +73,7 @@ public class QuotePublisher {
                 LOGGER.error("❌ Failed to publish quote for {} — code {}, channel: {}, streamId: {}, status: {}",
                         marketDataTick.getPair(), result, quotePub.channel(), quotePub.streamId(), quotePub.channelStatus());
             } else {
-                LOGGER.info("✅ Published quote for {}", marketDataTick.getPair());
+                LOGGER.debug("✅ Published quote for {}", marketDataTick.getPair());
                 try {
                     TimeUnit.MILLISECONDS.sleep(2000);
                 } catch (InterruptedException e) {
