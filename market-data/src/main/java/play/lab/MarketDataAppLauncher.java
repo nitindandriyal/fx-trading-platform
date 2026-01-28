@@ -32,5 +32,6 @@ public class MarketDataAppLauncher {
             barrier.await();
             LOGGER.info("Shutting down {}", agentRunner.agent());
         }
+        LOGGER.info("Application Stopped");
     }
 }

@@ -3,6 +3,7 @@ package pub.lab.trading.common.config.caches;
 import io.aeron.Aeron;
 import io.aeron.Publication;
 import io.aeron.Subscription;
+import org.agrona.CloseHelper;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import static pub.lab.trading.common.config.AeronConfigs.BOOTSTRAP_CHANNEL;
 import static pub.lab.trading.common.config.AeronConfigs.CONFIG_CHANNEL;
 
-public class ConfigAgent implements Worker {
+public class ConfigAgent implements Worker, AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigAgent.class);
 
@@ -154,8 +155,8 @@ public class ConfigAgent implements Worker {
     }
 
     @Override
-    public void onClose() {
-        configSubscription.close();
-        bootstrapPublication.close();
+    public void close() throws Exception {
+        CloseHelper.close(configSubscription);
+        CloseHelper.close(bootstrapPublication);
     }
 }
