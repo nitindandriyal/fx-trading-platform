@@ -11,12 +11,12 @@ import java.util.Objects;
 
 /**
  * Basic AeronBus implementation
- *
+ * <p>
  * Design goals:
  * - Single-threaded: call poll() and publish() from the same dedicated thread (per service).
  * - No allocations on hot path (other than what Aeron does internally).
  * - Works with your Aeron/SBE style: you pass DirectBuffer slices already encoded (SBE header + body).
- *
+ * <p>
  * Notes:
  * - If you need multi-threaded publishing, use Aeron ExclusivePublication or add synchronization.
  * - If you use SBE, you'll typically encode into an UnsafeBuffer and publish(...) that.
@@ -25,11 +25,9 @@ public class BasicAeronBus implements AeronBus, AutoCloseable {
 
     private final Subscription subscription;   // nullable if this bus is publish-only
     private final Publication publication;     // nullable if this bus is subscribe-only
-
-    private volatile SubscriptionHandler subscriptionHandler;
-
     // We use a FragmentAssembler to reassemble fragmented messages and deliver them as whole fragments.
     private final FragmentAssembler fragmentAssembler;
+    private volatile SubscriptionHandler subscriptionHandler;
 
     /**
      * Create a bus with both subscription and publication (either can be null).
@@ -65,7 +63,7 @@ public class BasicAeronBus implements AeronBus, AutoCloseable {
 
     /**
      * Poll the Aeron subscription.
-     *
+     * <p>
      * IMPORTANT: Must be called on the service thread that owns this bus.
      */
     @Override

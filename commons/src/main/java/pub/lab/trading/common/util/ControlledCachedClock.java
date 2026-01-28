@@ -1,6 +1,6 @@
 package pub.lab.trading.common.util;
 
-public class ControlledCachedClock extends CachedClock{
+public class ControlledCachedClock extends CachedClock {
     private long currentTimeNanos;
     private boolean isRunning = false;
 

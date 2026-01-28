@@ -3,12 +3,15 @@ package pub.lab.trading.tickdata.ingestor;
 import io.questdb.client.Sender;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 public class MarketTickCodec {
     public static final int MAX_SYMBOL_BYTES = 32;
+    private static final Logger LOGGER = LoggerFactory.getLogger(MarketTickCodec.class);
     private final MutableDirectBuffer buffer = new UnsafeBuffer(ByteBuffer.allocateDirect(1024));
 
     public void encode(
@@ -101,6 +104,16 @@ public class MarketTickCodec {
                 .doubleColumn("volume", volume)
                 .longColumn("level", level)
                 .atNow(); // Use ingestion time as designated timestamp
+        LOGGER.debug("Wrote tick to QuestDB: {} @ {} tenor={} valueDate={} tier={} bid={} ask={} vol={} level={}",
+                symbol,
+                creationTsMicros,
+                tenor,
+                valueDate,
+                clientTier,
+                bid,
+                ask,
+                volume,
+                level);
         return p;
     }
 }
