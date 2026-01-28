@@ -55,7 +55,7 @@ public class SpotPricerPipe implements Worker {
         quoteView.wrap(buf, offset + MessageHeaderDecoder.ENCODED_LENGTH);
         CurrencyPair currencyPair = quoteView.getSymbol();
         long timestamp = quoteView.priceCreationTimestamp();
-        long tenor = quoteView.getTenor();
+        int tenor = quoteView.getTenor();
         long valueDate = quoteView.getValueDate();
         long clientTier = quoteView.getClientTier();
         QuoteMessageDecoder.RungDecoder rungDecoder = quoteView.getRung();

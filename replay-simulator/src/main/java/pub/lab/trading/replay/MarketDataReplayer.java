@@ -111,7 +111,7 @@ public final class MarketDataReplayer implements Runnable, AutoCloseable {
 
         final CurrencyPair symbol = CurrencyPair.get(rs.getShort(1));
         final long creationTsMicros = rs.getLong(2);
-        final long tenor = rs.getLong(3);
+        final int tenor = rs.getInt(3);
         final long valueDate = rs.getLong(4);
         final long clientTier = rs.getLong(5);
         final double bid = rs.getDouble(6);

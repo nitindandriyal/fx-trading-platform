@@ -29,7 +29,7 @@ public class QuoteView {
     }
 
     // Accessor for tenor (uint32)
-    public long getTenor() {
+    public int getTenor() {
         return decoder.tenor();
     }
 

@@ -24,7 +24,7 @@ public class QuoteMessageWriter {
         this.rungCounter = 0;
     }
 
-    public QuoteMessageWriter beginQuote(CurrencyPair symbol, long valueDate, long timestamp, long tenor, long clientTier, int totalRungCount) {
+    public QuoteMessageWriter beginQuote(CurrencyPair symbol, long valueDate, long timestamp, int tenor, long clientTier, int totalRungCount) {
         if (totalRungCount > MAX_LEVELS) {
             throw new IllegalArgumentException("Total rung count (" + totalRungCount + ") exceeds maximum (" + MAX_LEVELS + ")");
         }
@@ -85,7 +85,7 @@ public class QuoteMessageWriter {
 
     // Convenience method for QuotePublisher
     public QuoteMessageWriter write(CurrencyPair pair, double bid, double ask) {
-        return beginQuote(pair, 0L, System.currentTimeMillis(), 0L, 0L, 1)
+        return beginQuote(pair, 0L, System.currentTimeMillis(), 0, 0L, 1)
                 .addRung(bid, ask, 1_000_000.0); // Default volume
     }
 }

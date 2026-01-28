@@ -33,4 +33,9 @@ public class MultiStreamPoller implements Agent {
     public String roleName() {
         return roleName;
     }
+
+    @Override
+    public String toString() {
+        return roleName;
+    }
 }
