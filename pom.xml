@@ -19,9 +19,9 @@
         <disruptor.version>3.4.4</disruptor.version>
         <chronicle-core.version>2.24ea7</chronicle-core.version>
         <slf4j.version>2.0.16</slf4j.version>
-        <logback.version>1.5.21</logback.version>
-        <junit.version>4.13.2</junit.version>
+        <logback.version>1.5.26</logback.version>
         <questdb.version>9.3.1</questdb.version>
+        <openhft.affinity.version>3.27ea1</openhft.affinity.version>
     </properties>
 
     <modules>
@@ -86,15 +86,14 @@
                 <version>${logback.version}</version>
             </dependency>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.questdb</groupId>
                 <artifactId>questdb</artifactId>
                 <version>${questdb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.openhft</groupId>
+                <artifactId>affinity</artifactId>
+                <version>${openhft.affinity.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

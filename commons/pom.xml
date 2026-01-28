@@ -33,6 +33,10 @@
             <groupId>io.aeron</groupId>
             <artifactId>aeron-all</artifactId>
         </dependency>
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>affinity</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

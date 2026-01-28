@@ -5,6 +5,7 @@ import org.agrona.concurrent.BackoffIdleStrategy;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pub.lab.trading.common.lifecycle.AgentAffinityLocker;
 import pub.lab.trading.common.lifecycle.MultiStreamPoller;
 import pub.lab.trading.common.lifecycle.Worker;
 
@@ -29,7 +30,7 @@ public class TickIngestorLauncher {
                         ));
                 var barrier = new ShutdownSignalBarrier()
         ) {
-            AgentRunner.startOnThread(agentRunner);
+            AgentAffinityLocker.pin(agentRunner);
             LOGGER.info("Started {}", agentRunner.agent());
             barrier.await();
             LOGGER.info("Shutting down {}", agentRunner.agent());
