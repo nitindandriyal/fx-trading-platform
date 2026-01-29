@@ -52,7 +52,7 @@ public class ConfigAgent implements Worker, AutoCloseable {
     private volatile boolean requestSent = false;
 
     public ConfigAgent(Aeron aeron, AppId appId, EnvId envId) {
-        this.configSubscription = aeron.addSubscription(CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
+        this.configSubscription = aeron.addSubscription(CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode());
         this.bootstrapPublication = aeron.addExclusivePublication(BOOTSTRAP_CHANNEL, StreamId.BOOTSTRAP_STREAM.getCode());
         this.appId = appId;
         this.envId = envId;

@@ -3,9 +3,7 @@ package pub.lab.trading.common.lifecycle;
 import io.aeron.Aeron;
 import io.aeron.Publication;
 import io.aeron.Subscription;
-import org.agrona.concurrent.IdleStrategy;
 import org.agrona.concurrent.UnsafeBuffer;
-import org.agrona.concurrent.YieldingIdleStrategy;
 import play.lab.model.sbe.HeartbeatMessageDecoder;
 import play.lab.model.sbe.MessageHeaderDecoder;
 import pub.lab.trading.common.config.AeronConfigs;
@@ -24,7 +22,6 @@ public class HeartBeatAgent implements Worker {
     private final AppId appId;
     private final long heartbeatIntervalMs;
     private final UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocateDirect(1024));
-    private final IdleStrategy idle = new YieldingIdleStrategy();
 
     private final Subscription heartbeatSub;
     private final Publication heartbeatPub;
@@ -56,6 +53,6 @@ public class HeartBeatAgent implements Worker {
 
     @Override
     public String roleName() {
-        return "heartbeat";
+        return appId + "-heartbeat";
     }
 }

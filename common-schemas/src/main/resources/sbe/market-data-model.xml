@@ -84,4 +84,25 @@
         <field name="level" id="9" type="uint16" description="Price level"/>
     </sbe:message>
 
+    <!-- Control plane -->
+    <sbe:message name="ClientMarketDataStreamStartRequest" id="101"
+                 description="Request to start a market data stream subscription">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="correlationId" id="2" type="uint64"/>
+        <field name="clientId" id="3" type="uint32"/>
+        <field name="product" id="4" type="Product"/>
+        <field name="symbol" id="5" type="CurrencyPair"/>
+        <field name="tenor" id="6" type="uint16"/>
+        <field name="valueDate" id="7" type="uint64" description="0 if unused"/>
+        <field name="levels" id="8" type="uint16" description="1 for TOB, N for depth"/>
+        <field name="clientTier" id="9" type="uint32" description="pricing tier"/>
+        <field name="venueId" id="10" type="uint16" description="0=any/default"/>
+    </sbe:message>
+
+    <sbe:message name="ClientMarketDataStreamStopRequest" id="102"
+                 description="Request to stop a market data stream subscription">
+        <field name="tsNanos" id="1" type="EpochNanos"/>
+        <field name="correlationId" id="2" type="uint64"/>
+    </sbe:message>
+
 </sbe:messageSchema>

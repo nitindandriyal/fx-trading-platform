@@ -5,11 +5,21 @@ import org.agrona.collections.Int2ObjectHashMap;
 public enum StreamId {
 
     BOOTSTRAP_STREAM(1),
-    RAW_QUOTE(1000),
-    MARKET_QUOTE(2000),
-    CLIENT_QUOTE(3000),
-    HEARTBEAT(8000),
-    CONFIG_STREAM(9000);
+    HEARTBEAT(2),
+
+    // Data Streams,
+    CONTROL_CONFIG_STREAM(1000),
+    CONTROL_RAW_QUOTE(2000),
+    CONTROL_MARKET_QUOTE(3000),
+    CONTROL_CLIENT_QUOTE(4000),
+
+    // Control Streams
+    DATA_CONFIG_STREAM(1100),
+    DATA_RAW_QUOTE(2100),
+    DATA_MARKET_QUOTE(3100),
+    DATA_CLIENT_QUOTE(4100),
+
+    NONE(-1); // end of streams
 
     private static final Int2ObjectHashMap<StreamId> MAP = new Int2ObjectHashMap<>();
 

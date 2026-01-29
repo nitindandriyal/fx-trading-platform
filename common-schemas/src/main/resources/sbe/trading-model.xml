@@ -46,7 +46,6 @@
         <type name="InstrumentId" primitiveType="uint32"/>
         <type name="Price" primitiveType="int64" semanticType="price" description="Scaled price (e.g. 1e5 or 1e6)"/>
         <type name="Qty" primitiveType="int64" semanticType="qty" description="Scaled qty (base units * scale)"/>
-        <type name="EpochNanos" primitiveType="uint64"/>
     </types>
     <!-- Pre-trade intent -->
     <sbe:message name="OrderIntent" id="1">

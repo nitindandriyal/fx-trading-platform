@@ -37,7 +37,7 @@ public class SpotPricerPipe implements Worker {
         this.clientTierConfigCache = configAgent.getClientTierConfigCache();
         this.fragmentHandler = (buf, offset, len, hdr) -> consumeQuotes(buf, offset);
         this.quoteSub = aeron.addSubscription(AeronConfigs.LIVE_CHANNEL,
-                StreamId.RAW_QUOTE.getCode(),
+                StreamId.DATA_RAW_QUOTE.getCode(),
                 image -> LOGGER.info("Image available: sessionId={}, channel={}, streamId={}",
                         image.sessionId(), image.sourceIdentity(), image.subscription().streamId()),
                 image -> LOGGER.warn("Image unavailable: sessionId={}, channel={}, streamId={}",
@@ -45,7 +45,7 @@ public class SpotPricerPipe implements Worker {
         );
         for (ClientTierLevel clientTierLevel : ClientTierLevel.values()) {
             marketQuotePublications.put(clientTierLevel, aeron.addExclusivePublication(AeronConfigs.LIVE_CHANNEL,
-                    StreamId.MARKET_QUOTE.getCode() + clientTierLevel.getId())
+                    StreamId.DATA_MARKET_QUOTE.getCode() + clientTierLevel.getId())
             );
         }
         LOGGER.info("Connected Aeron Dir : {} {} {}", aeron.context().aeronDirectory(), quoteSub.channel(), quoteSub.streamId());

@@ -22,7 +22,7 @@ public class QuotePublisher {
 
     QuotePublisher() {
         Aeron aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR));
-        this.quotePub = aeron.addPublication(AeronConfigs.LIVE_CHANNEL, StreamId.RAW_QUOTE.getCode());
+        this.quotePub = aeron.addPublication(AeronConfigs.LIVE_CHANNEL, StreamId.DATA_RAW_QUOTE.getCode());
         this.quoteMessageWriter = new QuoteMessageWriter();
         LOGGER.info("Connected Aeron Dir : {} {} {}", aeron.context().aeronDirectory(), quotePub.channel(), quotePub.streamId());
 

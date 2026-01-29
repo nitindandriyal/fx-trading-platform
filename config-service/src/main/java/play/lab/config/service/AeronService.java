@@ -90,21 +90,21 @@ public enum AeronService {
                         .aeron(aeron)
                         .controlRequestChannel(CONTROL_REQUEST_CHANNEL)
                         .controlResponseChannel(CONTROL_RESPONSE_CHANNEL));
-        LOGGER.info("CONFIG_CHANNEL={}, STREAM_ID={}", AeronConfigs.CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
+        LOGGER.info("CONFIG_CHANNEL={}, STREAM_ID={}", AeronConfigs.CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode());
         subscription = aeron.addSubscription(AeronConfigs.CONFIG_CHANNEL,
-                StreamId.CONFIG_STREAM.getCode());
+                StreamId.DATA_CONFIG_STREAM.getCode());
         publication = aeron.addExclusivePublication(AeronConfigs.CONFIG_CHANNEL,
-                StreamId.CONFIG_STREAM.getCode()
+                StreamId.DATA_CONFIG_STREAM.getCode()
         );
 
-        long liveRecordingId = extractArchivedAndLiveRecordings(archive, CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
+        long liveRecordingId = extractArchivedAndLiveRecordings(archive, CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode());
         for (Recording recording : recordings) {
             LOGGER.info("Recording found: {}", recording);
             if (recording.stopPosition == AeronArchive.NULL_POSITION) {
                 liveRecordingId = recording.recordingId;
                 break;
             }
-            archive.replay(recording.recordingId, 0L, Long.MAX_VALUE, AeronConfigs.CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode());
+            archive.replay(recording.recordingId, 0L, Long.MAX_VALUE, AeronConfigs.CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode());
         }
         startSubscription(aeron, archive, liveRecordingId);
     }
@@ -113,7 +113,7 @@ public enum AeronService {
 
         if (foundRecordingId < 0) {
             LOGGER.info("No existing recording found {} {}", foundRecordingId, AeronConfigs.CONFIG_CHANNEL);
-            archive.startRecording(AeronConfigs.CONFIG_CHANNEL, StreamId.CONFIG_STREAM.getCode(), SourceLocation.LOCAL);
+            archive.startRecording(AeronConfigs.CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode(), SourceLocation.LOCAL);
         }
 
         while (!subscription.isConnected()) {

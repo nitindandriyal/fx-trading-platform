@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <types>
+    <type name="string8" primitiveType="char" length="8"/>
+    <type name="string16" primitiveType="char" length="8"/>
+    <type name="string32" primitiveType="char" length="32"/>
+    <type name="string64" primitiveType="char" length="64"/>
+
+    <type name="EpochNanos" primitiveType="uint64"/>
+
     <composite name="messageHeader">
         <type name="blockLength" primitiveType="uint16"/>
         <type name="templateId" primitiveType="uint16"/>
@@ -123,8 +130,11 @@
         <validValue name="BTCADA" value="2">2</validValue>
     </enum>
 
-    <type name="string8" primitiveType="char" length="8"/>
-    <type name="string16" primitiveType="char" length="8"/>
-    <type name="string32" primitiveType="char" length="32"/>
-    <type name="string64" primitiveType="char" length="64"/>
+    <enum name="Product" encodingType="uint8">
+        <validValue name="SPOT" value="0">0</validValue>
+        <validValue name="FORWARD" value="1">1</validValue>
+        <validValue name="NDF" value="2">2</validValue>
+        <validValue name="SWAP" value="3">3</validValue>
+    </enum>
+
 </types>

@@ -28,7 +28,7 @@ public class AeronSubscriber implements FragmentHandler, Worker, AutoCloseable {
         this.aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR));
         this.sub = aeron.addSubscription(
                 AeronConfigs.LIVE_CHANNEL,
-                StreamId.RAW_QUOTE.getCode());
+                StreamId.DATA_RAW_QUOTE.getCode());
         this.writer = writer;
     }
 
