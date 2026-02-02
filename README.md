@@ -89,3 +89,57 @@ graph TD
     %% Annotations
     classDef external fill:#f9f,stroke:#333,stroke-width:2px
 
+
+OMS
+```mermaid
+flowchart LR
+
+  subgraph Clients
+    UI[Trader UI / Blotter]
+    PM[PM Tools / Algos]
+    API[REST or gRPC API]
+  end
+
+  subgraph Ingress
+    GW[API Gateway]
+    AUTH[Authentication and Entitlements]
+    NORM[Canonical Model and Enrichment]
+  end
+
+  subgraph OMS_Core
+    OC[Order Capture Service]
+    PRE[Pre-Trade Validation]
+    ORCH[Order Orchestrator State Machine]
+    ROUTE[Smart Order Router]
+    POST[Post-Trade Validation]
+  end
+
+  subgraph Eventing_State
+    LOG[(Event Log Kafka or Kinesis)]
+    ES[(Event Store Database)]
+    SNAP[(Snapshot Store)]
+    RM[(Read Models SQL or OpenSearch)]
+  end
+
+  subgraph External
+    EMS[EMS and Brokers FIX or REST]
+    RISK[Risk and Limits Engine]
+    BO[Middle and Back Office]
+  end
+
+  UI --> GW
+  PM --> GW
+  API --> GW
+
+  GW --> AUTH --> NORM --> OC --> PRE --> ORCH --> ROUTE --> EMS
+  EMS --> ORCH
+  ORCH --> POST --> BO
+
+  ORCH --> LOG --> ES
+  ES --> RM
+  ORCH --> SNAP
+  RM --> UI
+
+  RISK --> PRE
+
+
