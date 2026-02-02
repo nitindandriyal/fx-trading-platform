@@ -88,10 +88,12 @@ graph TD
 
     %% Annotations
     classDef external fill:#f9f,stroke:#333,stroke-width:2px
-
+```
 
 OMS
+
 ```mermaid
+
 flowchart LR
 
   subgraph Clients
@@ -142,4 +144,5 @@ flowchart LR
 
   RISK --> PRE
 
+```
 
