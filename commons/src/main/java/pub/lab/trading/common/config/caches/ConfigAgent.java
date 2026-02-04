@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static pub.lab.trading.common.config.AeronConfigs.BOOTSTRAP_CHANNEL;
-import static pub.lab.trading.common.config.AeronConfigs.CONFIG_CHANNEL;
+import static pub.lab.trading.common.config.AeronConfigs.PUBLISH_CONFIG_CHANNEL;
 
 public class ConfigAgent implements Worker, AutoCloseable {
 
@@ -52,7 +52,7 @@ public class ConfigAgent implements Worker, AutoCloseable {
     private volatile boolean requestSent = false;
 
     public ConfigAgent(Aeron aeron, AppId appId, EnvId envId) {
-        this.configSubscription = aeron.addSubscription(CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode());
+        this.configSubscription = aeron.addSubscription(PUBLISH_CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode());
         this.bootstrapPublication = aeron.addExclusivePublication(BOOTSTRAP_CHANNEL, StreamId.BOOTSTRAP_STREAM.getCode());
         this.appId = appId;
         this.envId = envId;

@@ -33,16 +33,17 @@ public class TierConfigView extends VerticalLayout {
     private final NumberField tierPriorityField = new NumberField("Tier Priority");
     private final Button addButton = new Button("Add Tier");
     private ListDataProvider<ClientTierFlyweight> dataProvider;
+    private AeronService aeronService;
 
-    public TierConfigView() {
+    public TierConfigView(AeronService aeronService) {
+        this.aeronService = aeronService;
         setSizeFull();
         initializeComponents();
     }
 
-    @PostConstruct
     public void init() {
         try {
-            List<ClientTierFlyweight> tiers = AeronService.INSTANCE.getCachedTiers();
+            List<ClientTierFlyweight> tiers = aeronService.getCachedTiers();
             dataProvider.getItems().clear();
             dataProvider.getItems().addAll(tiers);
             dataProvider.refreshAll();
@@ -69,7 +70,7 @@ public class TierConfigView extends VerticalLayout {
         grid.addColumn(ClientTierFlyweight::isAccessToCrosses).setHeader("Access to Crosses");
         grid.addColumn(ClientTierFlyweight::getCreditLimitUsd).setHeader("Credit Limit (USD)");
         grid.addColumn(ClientTierFlyweight::getTierPriority).setHeader("Tier Priority");
-        grid.setItems(AeronService.INSTANCE.getCachedTiers());
+        grid.setItems(aeronService.getCachedTiers());
         dataProvider = (ListDataProvider<ClientTierFlyweight>) grid.getDataProvider();
 
         // Configure form fields
@@ -139,7 +140,7 @@ public class TierConfigView extends VerticalLayout {
         }
 
         try {
-            AeronService.INSTANCE.sendTier(
+            aeronService.sendTier(
                     tierIdField.getValue().intValue(),
                     tierNameField.getValue(),
                     markupBpsField.getValue(),
@@ -157,7 +158,7 @@ public class TierConfigView extends VerticalLayout {
                     tierPriorityField.getValue().byteValue()
             );
             dataProvider.getItems().clear();
-            dataProvider.getItems().addAll(AeronService.INSTANCE.getCachedTiers());
+            dataProvider.getItems().addAll(aeronService.getCachedTiers());
             dataProvider.refreshAll();
             clearForm();
             Notification.show("Tier added: " + tierNameField.getValue());

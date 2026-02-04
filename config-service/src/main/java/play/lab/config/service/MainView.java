@@ -20,7 +20,9 @@ import java.util.Map;
 @Route("")
 @CssImport("./styles/custom-tabs-dark.css")
 public class MainView extends VerticalLayout implements RouterLayout, BeforeEnterObserver {
-    public MainView() {
+    private static AeronService aeronServiceStatic;
+    public MainView(AeronService aeronService) {
+        aeronServiceStatic = aeronService;
         RouteTabs routeTabs = new RouteTabs();
         routeTabs.add(new RouterLink("Tier Config", TiersView.class));
         routeTabs.add(new RouterLink("Pricing Config", PricingView.class, "txt"));
@@ -37,7 +39,9 @@ public class MainView extends VerticalLayout implements RouterLayout, BeforeEnte
     @Route(value = "tiers", layout = MainView.class)
     public static class TiersView extends Div {
         public TiersView() {
-            add(new TierConfigView());
+            TierConfigView tierConfigView = new TierConfigView(aeronServiceStatic);
+            tierConfigView.init();
+            add(tierConfigView);
         }
     }
 
@@ -45,7 +49,7 @@ public class MainView extends VerticalLayout implements RouterLayout, BeforeEnte
     public static class PricingView extends Div implements HasUrlParameter<String> {
         @Override
         public void setParameter(BeforeEvent beforeEvent, String s) {
-            PricingConfigView pricingConfigView = new PricingConfigView();
+            PricingConfigView pricingConfigView = new PricingConfigView(aeronServiceStatic);
             pricingConfigView.init();
             add(pricingConfigView);
         }

@@ -19,8 +19,10 @@ public class PricingConfigView extends VerticalLayout {
     private final NumberField priceField = new NumberField("Initial Price");
     private final NumberField volField = new NumberField("Volatility");
     private final NumberField spreadField = new NumberField("Spread (bps)");
+    private AeronService aeronService;
+    public PricingConfigView(AeronService aeronServiceStatic) {
+        this.aeronService = aeronServiceStatic;
 
-    public PricingConfigView() {
         setSizeFull();
 
         NumberField throttleField = new NumberField("Ticks/sec");
@@ -85,7 +87,13 @@ public class PricingConfigView extends VerticalLayout {
 
     private void refreshGrid() {
         getUI().ifPresent(ui -> ui.access(() -> {
-            grid.setItems(AeronService.INSTANCE.getPrices());
+            if(aeronService!=null) {
+                grid.setItems(aeronService.getPrices());
+            }
         }));
+    }
+
+    public void setAeronService(AeronService aeronService) {
+        this.aeronService = aeronService;
     }
 }

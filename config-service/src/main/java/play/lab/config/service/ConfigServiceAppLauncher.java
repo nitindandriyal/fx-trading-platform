@@ -9,10 +9,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @Theme(variant = Lumo.DARK)
 public class ConfigServiceAppLauncher implements AppShellConfigurator {
-    public static void main(String[] args) {
+
+    public static void main(String[] args) throws InterruptedException {
         SpringApplication.run(ConfigServiceAppLauncher.class, args);
-        Thread aeronThread = new Thread(AeronService.INSTANCE::loop);
-        aeronThread.setName("Aeron-Service-Thread");
-        aeronThread.start();
     }
 }

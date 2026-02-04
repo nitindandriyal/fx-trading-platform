@@ -24,46 +24,42 @@ public class ConfigUpdatePoller implements Worker, AutoCloseable {
     private final Subscription subscription;
     private final ExclusivePublication publication;
     private final Set<ClientTierFlyweight> cache;
-    private final OneToOneConcurrentArrayQueue<UnsafeBuffer> publishQueue;
+    private final OneToOneConcurrentArrayQueue<UnsafeBuffer> publishQueue = new OneToOneConcurrentArrayQueue<>(10);
     private boolean connected = false;
+
     public ConfigUpdatePoller(final Aeron aeron,
-                              final Set<ClientTierFlyweight> cache,
-                              final OneToOneConcurrentArrayQueue<UnsafeBuffer> publishQueue) {
-        this.subscription = aeron.addSubscription(AeronConfigs.CONFIG_CHANNEL,
+                              final Set<ClientTierFlyweight> cache) {
+        this.subscription = aeron.addSubscription(AeronConfigs.REPLAY_CONFIG_CHANNEL,
                 StreamId.DATA_CONFIG_STREAM.getCode());
-        this.publication = aeron.addExclusivePublication(AeronConfigs.CONFIG_CHANNEL,
+        this.publication = aeron.addExclusivePublication(AeronConfigs.PUBLISH_CONFIG_CHANNEL,
                 StreamId.DATA_CONFIG_STREAM.getCode()
         );
         this.cache = cache;
-        this.publishQueue = publishQueue;
     }
 
     @Override
     public int doWork() throws Exception {
-        startSubscription();
-        return 0;
-    }
-
-    private void startSubscription() {
         while (!subscription.isConnected()) {
             new NoOpIdleStrategy().idle();
         }
         if (!connected) {
-            LOGGER.info("✅ Config subscription connected streamId={}", subscription.streamId());
+            LOGGER.info("✅ Config subscription connected streamId={} channel={}", subscription.streamId(), subscription.channel());
             connected = true;
         }
 
-        UnsafeBuffer buffer = publishQueue.poll();
-
-        if (buffer != null) {
-            ClientTierConfigMessageDecoder clientTierConfigMessageDecoder = new ClientTierConfigMessageDecoder();
-            clientTierConfigMessageDecoder.wrap(buffer, 0, ClientTierConfigMessageDecoder.BLOCK_LENGTH, ClientTierConfigMessageDecoder.SCHEMA_VERSION);
-            LOGGER.info("Publishing tierId={} tierName={}", clientTierConfigMessageDecoder.tierId(), clientTierConfigMessageDecoder.tierName());
-            long result = publication.offer(buffer, 0, ClientTierConfigMessageDecoder.BLOCK_LENGTH);
-            if (result < 0) {
-                LOGGER.error("❌ Failed to publish config result {} size {} stream {}", result, ClientTierFlyweight.messageSize(), publication.streamId());
-            } else {
-                LOGGER.info("✅ Published config stream {} tierId={}, tierName={}", publication.streamId(), clientTierConfigMessageDecoder.tierId(), clientTierConfigMessageDecoder.tierName());
+        if (!publishQueue.isEmpty()) {
+            UnsafeBuffer buffer = publishQueue.poll();
+            LOGGER.info("Publishing config from queue, remaining size={}", publishQueue.size());
+            if (buffer != null) {
+                ClientTierConfigMessageDecoder clientTierConfigMessageDecoder = new ClientTierConfigMessageDecoder();
+                clientTierConfigMessageDecoder.wrap(buffer, 0, ClientTierConfigMessageDecoder.BLOCK_LENGTH, ClientTierConfigMessageDecoder.SCHEMA_VERSION);
+                LOGGER.info("Publishing tierId={} tierName={}", clientTierConfigMessageDecoder.tierId(), clientTierConfigMessageDecoder.tierName());
+                long result = publication.offer(buffer, 0, ClientTierConfigMessageDecoder.BLOCK_LENGTH);
+                if (result < 0) {
+                    LOGGER.error("❌ Failed to publish config result {} size {} stream {}", result, ClientTierFlyweight.messageSize(), publication.streamId());
+                } else {
+                    LOGGER.info("✅ Published config stream {} tierId={}, tierName={}", publication.streamId(), clientTierConfigMessageDecoder.tierId(), clientTierConfigMessageDecoder.tierName());
+                }
             }
         }
 
@@ -75,6 +71,7 @@ public class ConfigUpdatePoller implements Worker, AutoCloseable {
             Thread.yield();
         }
 
+        return fragments;
     }
 
     private void onClientTierConfigUpdate(DirectBuffer buffer1, int offset1) {
@@ -113,7 +110,12 @@ public class ConfigUpdatePoller implements Worker, AutoCloseable {
 
     @Override
     public void close() {
+        LOGGER.info("Closing ConfigUpdatePoller Pub/Sub");
         publication.close();
         subscription.close();
+    }
+
+    public void updateNewTier(UnsafeBuffer buffer) {
+        publishQueue.offer(buffer);
     }
 }
