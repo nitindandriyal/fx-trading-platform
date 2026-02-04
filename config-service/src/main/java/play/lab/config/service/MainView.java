@@ -21,6 +21,7 @@ import java.util.Map;
 @CssImport("./styles/custom-tabs-dark.css")
 public class MainView extends VerticalLayout implements RouterLayout, BeforeEnterObserver {
     private static AeronService aeronServiceStatic;
+
     public MainView(AeronService aeronService) {
         aeronServiceStatic = aeronService;
         RouteTabs routeTabs = new RouteTabs();

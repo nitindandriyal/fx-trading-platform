@@ -9,7 +9,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
-import jakarta.annotation.PostConstruct;
 import pub.lab.trading.common.model.config.ClientTierFlyweight;
 
 import java.util.List;
@@ -33,7 +32,8 @@ public class TierConfigView extends VerticalLayout {
     private final NumberField tierPriorityField = new NumberField("Tier Priority");
     private final Button addButton = new Button("Add Tier");
     private ListDataProvider<ClientTierFlyweight> dataProvider;
-    private AeronService aeronService;
+
+    private final AeronService aeronService;
 
     public TierConfigView(AeronService aeronService) {
         this.aeronService = aeronService;
@@ -120,10 +120,12 @@ public class TierConfigView extends VerticalLayout {
             Notification.show("Tier name is required", 3000, Notification.Position.MIDDLE);
             return;
         }
+
         if (tierNameField.getValue().length() > 64) {
             Notification.show("Tier name must be 64 characters or less", 3000, Notification.Position.MIDDLE);
             return;
         }
+
         if (tierIdField.isEmpty()
                 || markupBpsField.isEmpty()
                 || spreadTighteningFactorField.isEmpty()
@@ -155,18 +157,26 @@ public class TierConfigView extends VerticalLayout {
                     limitOrderEnabledField.getValue(),
                     accessToCrossesField.getValue(),
                     creditLimitUsdField.getValue(),
-                    tierPriorityField.getValue().byteValue()
+                    tierPriorityField.getValue().byteValue(),
+                    this
             );
-            dataProvider.getItems().clear();
-            dataProvider.getItems().addAll(aeronService.getCachedTiers());
-            dataProvider.refreshAll();
-            clearForm();
-            Notification.show("Tier added: " + tierNameField.getValue());
         } catch (IllegalArgumentException e) {
             Notification.show("Invalid input: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
         } catch (Exception e) {
             Notification.show("Error adding tier: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
         }
+    }
+
+    public void refreshGrid() {
+        getUI().ifPresent(ui -> ui.access(() -> {
+            if (aeronService != null) {
+                dataProvider.getItems().clear();
+                dataProvider.getItems().addAll(aeronService.getCachedTiers());
+                dataProvider.refreshAll();
+                clearForm();
+                Notification.show("Tier added: " + tierNameField.getValue());
+            }
+        }));
     }
 
     private void clearForm() {

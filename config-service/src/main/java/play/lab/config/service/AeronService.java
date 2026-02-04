@@ -10,7 +10,6 @@ import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -44,11 +43,11 @@ public class AeronService {
 
     private final Logger LOGGER = LoggerFactory.getLogger(AeronService.class);
 
-    private final CountDownLatch aeronStarted;
-
     private final Set<ClientTierFlyweight> cache = new HashSet<>();
     private final ConcurrentMap<String, MarketDataTick> latestTicks = new ConcurrentHashMap<>();
     private final List<Recording> recordings = new ArrayList<>();
+
+    private final CountDownLatch aeronStarted;
     private ConfigUpdatePoller configUpdatePoller;
 
     public AeronService(CountDownLatch aeronStarted) {
@@ -60,12 +59,25 @@ public class AeronService {
         new Thread(this::startEventLoop, "AeronService-EventLoop").start();
     }
 
-    public void sendTier(int tierId, String tierName, double markupBps, double spreadTighteningFactor,
-                         long quoteThrottleMs, long latencyProtectionMs, long quoteExpiryMs,
-                         double minNotional, double maxNotional, byte pricePrecision,
-                         boolean streamingEnabled, boolean limitOrderEnabled, boolean accessToCrosses,
-                         double creditLimitUsd, byte tierPriority) {
+    public void sendTier(final int tierId,
+                         final String tierName,
+                         final double markupBps,
+                         final double spreadTighteningFactor,
+                         final long quoteThrottleMs,
+                         final long latencyProtectionMs,
+                         final long quoteExpiryMs,
+                         final double minNotional,
+                         final double maxNotional,
+                         final byte pricePrecision,
+                         final boolean streamingEnabled,
+                         final boolean limitOrderEnabled,
+                         final boolean accessToCrosses,
+                         final double creditLimitUsd,
+                         final byte tierPriority,
+                         final TierConfigView tierConfigView) {
+
         UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocateDirect(1024));
+
         ClientTierConfigMessageEncoder clientTierConfigMessageEncoder = new ClientTierConfigMessageEncoder();
         clientTierConfigMessageEncoder.wrap(buffer, 0)
                 .tierId(tierId)
@@ -84,8 +96,7 @@ public class AeronService {
                 .creditLimitUsd(creditLimitUsd)
                 .tierPriority(tierPriority);
 
-        configUpdatePoller.updateNewTier(buffer);
-
+        configUpdatePoller.updateNewTier(buffer, tierConfigView);
         LOGGER.info("Enqueued for publishing: {}", clientTierConfigMessageEncoder);
     }
 
