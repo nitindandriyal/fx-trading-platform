@@ -4,6 +4,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * A GC-free flyweight for reading and writing ClientTier SBE messages.
@@ -313,5 +314,17 @@ public class ClientTierFlyweight {
         if (mutableBuffer == null) {
             throw new IllegalStateException("Buffer is not mutable");
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ClientTierFlyweight that = (ClientTierFlyweight) o;
+        return Objects.equals(getTierId(), that.getTierId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getTierId());
     }
 }

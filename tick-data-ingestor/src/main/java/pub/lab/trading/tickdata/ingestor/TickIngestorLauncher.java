@@ -17,7 +17,7 @@ public class TickIngestorLauncher {
         LOGGER.info("Application Starting Up");
         try (
                 QuestDBWriter writer = new QuestDBWriter(questDbConfig);
-                AeronSubscriber subscriber = new AeronSubscriber(writer);
+                TickAeronSubscriber subscriber = new TickAeronSubscriber(writer);
                 AgentRunner agentRunner = new AgentRunner(new BackoffIdleStrategy(),
                         Throwable::printStackTrace,
                         null,

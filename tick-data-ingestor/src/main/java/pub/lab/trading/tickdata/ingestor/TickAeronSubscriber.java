@@ -16,15 +16,15 @@ import pub.lab.trading.common.config.StreamId;
 import pub.lab.trading.common.lifecycle.Worker;
 import pub.lab.trading.common.model.pricing.QuoteView;
 
-public class AeronSubscriber implements FragmentHandler, Worker, AutoCloseable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AeronSubscriber.class);
+public class TickAeronSubscriber implements FragmentHandler, Worker, AutoCloseable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TickAeronSubscriber.class);
 
     private final QuestDBWriter writer;
     private final QuoteView quoteView = new QuoteView();
     private final Aeron aeron;
     private final Subscription sub;
 
-    public AeronSubscriber(QuestDBWriter writer) {
+    public TickAeronSubscriber(QuestDBWriter writer) {
         this.aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(AeronConfigs.AERON_LIVE_DIR));
         this.sub = aeron.addSubscription(
                 AeronConfigs.LIVE_CHANNEL,

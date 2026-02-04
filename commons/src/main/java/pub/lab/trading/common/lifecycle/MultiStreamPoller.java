@@ -30,6 +30,17 @@ public class MultiStreamPoller implements Agent {
     }
 
     @Override
+    public void onClose() {
+        for (Worker worker : workers) {
+            try {
+                worker.onClose();
+            } catch (Throwable t) {
+                LOGGER.error("Worker {} failed to close properly", worker, t);
+            }
+        }
+    }
+
+    @Override
     public String roleName() {
         return roleName;
     }
