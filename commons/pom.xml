@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>uk.co.real-logic</groupId>
-            <artifactId>sbe-all</artifactId>
+            <artifactId>sbe-tool</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>io.aeron</groupId>
-            <artifactId>aeron-all</artifactId>
+            <artifactId>aeron-client</artifactId>
         </dependency>
         <dependency>
             <groupId>net.openhft</groupId>

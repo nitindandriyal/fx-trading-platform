@@ -1,5 +1,6 @@
 package play.lab.config.service;
 
+import com.vaadin.flow.component.UI;
 import io.aeron.Aeron;
 import io.aeron.archive.client.AeronArchive;
 import io.aeron.archive.client.RecordingDescriptorConsumer;
@@ -27,6 +28,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -74,7 +76,8 @@ public class AeronService {
                          final boolean accessToCrosses,
                          final double creditLimitUsd,
                          final byte tierPriority,
-                         final TierConfigView tierConfigView) {
+                         final TierConfigView tierConfigView,
+                         Optional<UI> ui) {
 
         UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocateDirect(1024));
 
@@ -96,13 +99,13 @@ public class AeronService {
                 .creditLimitUsd(creditLimitUsd)
                 .tierPriority(tierPriority);
 
-        configUpdatePoller.updateNewTier(buffer, tierConfigView);
+        configUpdatePoller.updateNewTier(buffer, tierConfigView, ui);
         LOGGER.info("Enqueued for publishing: {}", clientTierConfigMessageEncoder);
     }
 
-    public List<ClientTierFlyweight> getCachedTiers() {
+    public Set<ClientTierFlyweight> getCachedTiers() {
         synchronized (cache) {
-            return new ArrayList<>(cache);
+            return new HashSet<>(cache);
         }
     }
 

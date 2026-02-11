@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>io.aeron</groupId>
-            <artifactId>aeron-all</artifactId>
+            <artifactId>aeron-client</artifactId>
         </dependency>
     </dependencies>
 

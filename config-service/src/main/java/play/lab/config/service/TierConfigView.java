@@ -1,5 +1,6 @@
 package play.lab.config.service;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
@@ -9,11 +10,16 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pub.lab.trading.common.model.config.ClientTierFlyweight;
 
-import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public class TierConfigView extends VerticalLayout {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TierConfigView.class);
+
     private final Grid<ClientTierFlyweight> grid = new Grid<>();
     private final NumberField tierIdField = new NumberField("Tier ID");
     private final TextField tierNameField = new TextField("Tier Name");
@@ -43,11 +49,12 @@ public class TierConfigView extends VerticalLayout {
 
     public void init() {
         try {
-            List<ClientTierFlyweight> tiers = aeronService.getCachedTiers();
+            Set<ClientTierFlyweight> tiers = aeronService.getCachedTiers();
             dataProvider.getItems().clear();
             dataProvider.getItems().addAll(tiers);
             dataProvider.refreshAll();
             Notification.show("Loaded " + tiers.size() + " tiers from archive");
+            LOGGER.info("Loaded {} tiers from AeronService", tiers.size());
         } catch (Exception e) {
             Notification.show("Error loading tiers: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
         }
@@ -158,7 +165,8 @@ public class TierConfigView extends VerticalLayout {
                     accessToCrossesField.getValue(),
                     creditLimitUsdField.getValue(),
                     tierPriorityField.getValue().byteValue(),
-                    this
+                    this,
+                    getUI()
             );
         } catch (IllegalArgumentException e) {
             Notification.show("Invalid input: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
@@ -167,14 +175,12 @@ public class TierConfigView extends VerticalLayout {
         }
     }
 
-    public void refreshGrid() {
-        getUI().ifPresent(ui -> ui.access(() -> {
+    public void refreshGrid(Optional<UI> ui) {
+        LOGGER.info("Refreshing grid with latest tiers from AeronService {} {} {}", tierNameField.getValue(), aeronService, getUI().isPresent());
+        ui.ifPresent(u -> u.access(() -> {
+            LOGGER.info("Inside UI access block, refreshing grid with latest tiers from AeronService {} {}", tierNameField.getValue(), aeronService);
             if (aeronService != null) {
-                dataProvider.getItems().clear();
-                dataProvider.getItems().addAll(aeronService.getCachedTiers());
-                dataProvider.refreshAll();
-                clearForm();
-                Notification.show("Tier added: " + tierNameField.getValue());
+                init();
             }
         }));
     }

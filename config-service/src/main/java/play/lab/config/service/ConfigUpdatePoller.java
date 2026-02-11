@@ -1,5 +1,6 @@
 package play.lab.config.service;
 
+import com.vaadin.flow.component.UI;
 import io.aeron.Aeron;
 import io.aeron.ExclusivePublication;
 import io.aeron.Subscription;
@@ -16,6 +17,7 @@ import pub.lab.trading.common.lifecycle.Worker;
 import pub.lab.trading.common.model.config.ClientTierFlyweight;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.Set;
 
 public class ConfigUpdatePoller implements Worker, AutoCloseable {
@@ -28,6 +30,7 @@ public class ConfigUpdatePoller implements Worker, AutoCloseable {
     private final Set<ClientTierFlyweight> cache;
     private boolean connected = false;
     private TierConfigView tierConfigView;
+    private Optional<UI> ui;
 
     public ConfigUpdatePoller(final Aeron aeron,
                               final Set<ClientTierFlyweight> cache) {
@@ -64,7 +67,7 @@ public class ConfigUpdatePoller implements Worker, AutoCloseable {
                     LOGGER.info("✅ Published config stream {} tierId={}, tierName={}", publication.streamId(),
                             clientTierConfigMessageDecoder.tierId(),
                             clientTierConfigMessageDecoder.tierName());
-                    tierConfigView.refreshGrid();
+                    tierConfigView.refreshGrid(ui);
                 }
             }
         }
@@ -106,6 +109,9 @@ public class ConfigUpdatePoller implements Worker, AutoCloseable {
                     .setTierPriority((byte) clientTierConfigMessageDecoder1.tierPriority());
             LOGGER.info("Received tierId={} tierName={}", clientTierConfigMessageDecoder1.tierId(), clientTierConfigMessageDecoder1.tierName());
             cache.add(clientTierFlyweight);
+            if(tierConfigView != null) {
+                tierConfigView.refreshGrid(ui);
+            }
         }
     }
 
@@ -121,8 +127,9 @@ public class ConfigUpdatePoller implements Worker, AutoCloseable {
         subscription.close();
     }
 
-    public void updateNewTier(UnsafeBuffer buffer, TierConfigView tierConfigView) {
+    public void updateNewTier(UnsafeBuffer buffer, TierConfigView tierConfigView, Optional<UI> ui) {
         this.tierConfigView = tierConfigView;
+        this.ui = ui;
         publishQueue.offer(buffer);
     }
 }

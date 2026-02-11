@@ -17,7 +17,7 @@
         </dependency>
         <dependency>
             <groupId>uk.co.real-logic</groupId>
-            <artifactId>sbe-all</artifactId>
+            <artifactId>sbe-tool</artifactId>
         </dependency>
         <dependency>
             <groupId>pub.lab.trading</groupId>
