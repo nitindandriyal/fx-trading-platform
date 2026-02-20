@@ -56,27 +56,8 @@ public class QuoteMessageWriter {
         return this;
     }
 
-    public QuoteMessageWriter setPrices(double[] bids, double[] asks, double[] volumes, int levels) {
-        if (levels > MAX_LEVELS) {
-            throw new IllegalArgumentException("Levels (" + levels + ") exceeds maximum (" + MAX_LEVELS + ")");
-        }
-        if (bids.length < levels || asks.length < levels || volumes.length < levels) {
-            throw new IllegalArgumentException("Array lengths must be at least " + levels);
-        }
-
-        rungEncoder = quoteMessageEncoder.rungCount(levels);
-        for (int i = 0; i < levels; i++) {
-            rungEncoder.bid(bids[i]).ask(asks[i]).volume(volumes[i]);
-            if (i < levels - 1) {
-                rungEncoder = rungEncoder.next();
-            }
-        }
-        rungCounter = levels;
-        return this;
-    }
-
     public int encodedLength() {
-        return quoteMessageEncoder.encodedLength();
+        return MessageHeaderEncoder.ENCODED_LENGTH + quoteMessageEncoder.encodedLength();
     }
 
     public UnsafeBuffer buffer() {

@@ -30,7 +30,7 @@ public class QuotePublisher {
         while (!quotePub.isConnected()) {
             LOGGER.warn("⏳ Waiting for subscriber...");
             try {
-                TimeUnit.MILLISECONDS.sleep(2000);
+                TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -45,7 +45,7 @@ public class QuotePublisher {
                     marketDataTick.getValueDateEpoch(),
                     Tenor.SPOT.getCode(),
                     ClientTierLevel.GOLD.getId(),
-                    1);
+                    5);
             int encodedLength = quoteMessageWriter.encodedLength();
             LOGGER.info("Preparing to publish quote for {}: bid={}, ask={}, encodedLength={}",
                     marketDataTick.getPair(),
@@ -56,7 +56,27 @@ public class QuotePublisher {
             quoteMessageWriter.addRung(
                     marketDataTick.getBid(),
                     marketDataTick.getAsk(),
-                    1_000_000
+                    10_000_000
+            );
+            quoteMessageWriter.addRung(
+                    marketDataTick.getBid() - 0.0001,
+                    marketDataTick.getAsk() + 0.0001,
+                    20_000_000
+            );
+            quoteMessageWriter.addRung(
+                    marketDataTick.getBid() - 0.0002,
+                    marketDataTick.getAsk() + 0.0002,
+                    30_000_000
+            );
+            quoteMessageWriter.addRung(
+                    marketDataTick.getBid() - 0.0003,
+                    marketDataTick.getAsk() + 0.0003,
+                    40_000_000
+            );
+            quoteMessageWriter.addRung(
+                    marketDataTick.getBid() - 0.0004,
+                    marketDataTick.getAsk() + 0.0004,
+                    50_000_000
             );
             UnsafeBuffer buffer = quoteMessageWriter.buffer();
             encodedLength = quoteMessageWriter.encodedLength();
@@ -73,7 +93,7 @@ public class QuotePublisher {
             } else {
                 LOGGER.debug("✅ Published quote for {}", marketDataTick.getPair());
                 try {
-                    TimeUnit.MILLISECONDS.sleep(2000);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

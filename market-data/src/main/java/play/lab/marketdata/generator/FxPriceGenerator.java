@@ -30,7 +30,7 @@ public class FxPriceGenerator implements Worker {
     private final Map<Currency, RawPriceConfig> configOverridesByCcy = new ConcurrentHashMap<>();
     private final RawPriceConfig defaultConfig = new RawPriceConfig(Currency.NULL_VAL, DEFAULT_VOLATILITY, DEFAULT_SPREAD_BP);
     private final QuotePublisher aeronPub = new QuotePublisher();
-    private final TickThrottle throttle = new TickThrottle(1000);
+    private final TickThrottle throttle = new TickThrottle(30); // 100ms
 
     public FxPriceGenerator(final CachedClock cachedClock) {
         this.cachedClock = cachedClock;
@@ -149,6 +149,7 @@ public class FxPriceGenerator implements Worker {
             PairModel model = entry.getValue();
             MarketDataTick tick = model.nextTick(now, dtSeconds);
             aeronPub.publish(tick);
+            LOGGER.debug("Generated tick: {}", tick);
         }
     }
 

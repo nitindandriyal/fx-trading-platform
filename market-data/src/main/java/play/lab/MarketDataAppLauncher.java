@@ -1,12 +1,11 @@
 package play.lab;
 
 import org.agrona.concurrent.AgentRunner;
-import org.agrona.concurrent.BackoffIdleStrategy;
+import org.agrona.concurrent.BusySpinIdleStrategy;
 import org.agrona.concurrent.ShutdownSignalBarrier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import play.lab.marketdata.generator.FxPriceGenerator;
-import pub.lab.trading.common.lifecycle.AgentAffinityLocker;
 import pub.lab.trading.common.lifecycle.MultiStreamPoller;
 import pub.lab.trading.common.lifecycle.Worker;
 import pub.lab.trading.common.util.CachedClock;
@@ -17,7 +16,7 @@ public class MarketDataAppLauncher {
     public static void main(String[] args) {
         LOGGER.info("Application Starting Up");
         try (
-                AgentRunner agentRunner = new AgentRunner(new BackoffIdleStrategy(),
+                AgentRunner agentRunner = new AgentRunner(new BusySpinIdleStrategy(),
                         Throwable::printStackTrace,
                         null,
                         new MultiStreamPoller(
@@ -28,7 +27,7 @@ public class MarketDataAppLauncher {
                         ));
                 var barrier = new ShutdownSignalBarrier()
         ) {
-            AgentAffinityLocker.pin(agentRunner);
+            AgentRunner.startOnThread(agentRunner);
             LOGGER.info("Started {}", agentRunner.agent());
             barrier.await();
             LOGGER.info("Shutting down {}", agentRunner.agent());

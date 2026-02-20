@@ -62,7 +62,7 @@ public class SpotPricerPipe implements Worker {
         while (rungDecoder.hasNext()) {
             QuoteMessageDecoder.RungDecoder nextRung = rungDecoder.next();
             for (ClientTierLevel clientTierLevel : ClientTierLevel.values()) {
-                double volume = 1_000_000.0;
+                double volume = nextRung.volume();
                 ClientTierConfig clientTierConfig = clientTierConfigCache.get(clientTierLevel.getId());
                 double volFactor = Math.log10(nextRung.volume() / volume + 1.0);
                 double spreadAdjust = 0.0; // default
@@ -77,8 +77,8 @@ public class SpotPricerPipe implements Worker {
                 double bid = mid - (spreadAdjust * 0.5) - adjustment;
                 double ask = mid + (spreadAdjust * 0.5) + adjustment;
 
-                LOGGER.info("symbol={}, timestamp={}, tenor={}, valueDate={}, clientTier={}, bid={}, ask={}",
-                        currencyPair, timestamp, tenor, valueDate, clientTier, bid, ask);
+                LOGGER.info("symbol={}, timestamp={}, tenor={}, valueDate={}, clientTier={}, bid={}, ask={}, volume={}",
+                        currencyPair, timestamp, tenor, valueDate, clientTier, bid, ask, volume);
                 quoteMessageWriter.beginQuote(
                         currencyPair,
                         valueDate,
@@ -97,7 +97,7 @@ public class SpotPricerPipe implements Worker {
                 long result = marketQuotePublications.get(clientTierLevel).offer(buffer, 0, encodedLength);
 
                 if (result < 0) {
-                    LOGGER.error("❌ Failed to publish quote to {} : reason {}", marketQuotePublications.get(clientTierLevel), result);
+                    //LOGGER.error("❌ Failed to publish quote to {} : reason {}", marketQuotePublications.get(clientTierLevel), result);
                 } else {
                     LOGGER.info("✅ Published quote for");
                 }
