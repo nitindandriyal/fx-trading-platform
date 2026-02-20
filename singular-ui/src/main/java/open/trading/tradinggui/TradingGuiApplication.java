@@ -1,5 +1,6 @@
 package open.trading.tradinggui;
 
+import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
@@ -23,7 +24,6 @@ import javafx.stage.Stage;
 import open.trading.tradinggui.config.PairConfig;
 import open.trading.tradinggui.data.TickAeronSubscriber;
 import open.trading.tradinggui.widget.BigTile;
-import open.trading.tradinggui.widget.BigTileFactory;
 import org.agrona.concurrent.AgentRunner;
 import org.agrona.concurrent.BackoffIdleStrategy;
 import pub.lab.trading.common.lifecycle.MultiStreamPoller;
@@ -37,6 +37,61 @@ public class TradingGuiApplication extends Application {
 
     public static void main(String[] args) {
         launch();
+    }
+
+    private static VBox getSettingsVBox(ListView<PairConfig> list) {
+        VBox spreadSettings = getSpreadSettings(list);
+
+        return new VBox(10,
+                new HBox(new Label("Settings") {{
+                    setStyle("""
+                                -fx-font-family: 'Roboto Condensed';
+                                -fx-font-size: 16px;
+                                -fx-font-weight: 900;
+                                -fx-text-fill: rgba(245,245,255,0.80);
+                            """);
+                }}) {{
+                    setStyle("""
+                                -fx-background-color:
+                                    linear-gradient(to bottom, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 18%, rgba(255,255,255,0.00) 45%),
+                                    linear-gradient(to bottom, #141018 0%, #0f0c12 60%, #0b0910 100%);
+                                    -fx-font-family: 'Roboto Condensed';
+                                -fx-background-radius: 10;
+                                -fx-border-radius: 10;
+                                -fx-border-width: 1;
+                                -fx-border-color: rgba(255,255,255,0.06);
+                                -fx-padding: 8px 12px;
+                            """);
+                }},
+                spreadSettings
+        );
+    }
+
+    private static VBox getSpreadSettings(ListView<PairConfig> list) {
+        VBox spreadSettings = new VBox(10,
+                new Label("Core Spread(Pips)") {{
+                    setStyle("""
+                                -fx-font-family: 'Roboto Condensed';
+                                -fx-font-size: 14px;
+                                -fx-font-weight: 900;
+                                -fx-text-fill: rgba(245,245,255,0.80);
+                                -fx-padding: 8px 12px;
+                            """);
+                }},
+                list
+        );
+
+        spreadSettings.setStyle("""
+                    -fx-background-color:
+                                    linear-gradient(to bottom, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 18%, rgba(255,255,255,0.00) 45%),
+                                    linear-gradient(to bottom, #141018 0%, #0f0c12 60%, #0b0910 100%);
+                                    -fx-font-family: 'Roboto Condensed';
+                    -fx-font-size: 12px;
+                    -fx-font-weight: 700;
+                    -fx-text-fill: rgba(245,245,255,0.75);
+                """);
+
+        return spreadSettings;
     }
 
     @Override
@@ -95,13 +150,30 @@ public class TradingGuiApplication extends Application {
 
         // --- Start demo pricing service reading the slider configs ---
         //new DemoPriceService().start(tiles, configs);
+
+        // Create Aeron subscriber with throttler
+        TickAeronSubscriber tickSubscriber = new TickAeronSubscriber(tilePane);
+
+        // Setup AnimationTimer to process batched GUI updates at 60 FPS,
+        // but throttled to 30 Hz (33ms) to prevent stalling
+        AnimationTimer guiUpdateTimer = new AnimationTimer() {
+            private final Map<String, BigTile> tileCache = new LinkedHashMap<>();
+
+            @Override
+            public void handle(long now) {
+                // Process batched updates from throttler
+                tickSubscriber.getUpdateThrottler().processBatchUpdates();
+            }
+        };
+        guiUpdateTimer.start();
+
         AgentRunner agentRunner = new AgentRunner(new BackoffIdleStrategy(),
                 Throwable::printStackTrace,
                 null,
                 new MultiStreamPoller(
                         "marketdata-ingestion-poller",
                         new Worker[]{
-                                new TickAeronSubscriber(tilePane)
+                                tickSubscriber
                         }
                 ));
         AgentRunner.startOnThread(agentRunner);
@@ -191,60 +263,5 @@ public class TradingGuiApplication extends Application {
 
 
         return drawer;
-    }
-
-    private static VBox getSettingsVBox(ListView<PairConfig> list) {
-        VBox spreadSettings = getSpreadSettings(list);
-
-        return new VBox(10,
-                new HBox(new Label("Settings") {{
-                    setStyle("""
-                                -fx-font-family: 'Roboto Condensed';
-                                -fx-font-size: 16px;
-                                -fx-font-weight: 900;
-                                -fx-text-fill: rgba(245,245,255,0.80);
-                            """);
-                }}) {{
-                    setStyle("""
-                                -fx-background-color:
-                                    linear-gradient(to bottom, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 18%, rgba(255,255,255,0.00) 45%),
-                                    linear-gradient(to bottom, #141018 0%, #0f0c12 60%, #0b0910 100%);
-                                    -fx-font-family: 'Roboto Condensed';
-                                -fx-background-radius: 10;
-                                -fx-border-radius: 10;
-                                -fx-border-width: 1;
-                                -fx-border-color: rgba(255,255,255,0.06);
-                                -fx-padding: 8px 12px;
-                            """);
-                }},
-                spreadSettings
-        );
-    }
-
-    private static VBox getSpreadSettings(ListView<PairConfig> list) {
-        VBox spreadSettings = new VBox(10,
-                new Label("Core Spread(Pips)") {{
-                    setStyle("""
-                                -fx-font-family: 'Roboto Condensed';
-                                -fx-font-size: 14px;
-                                -fx-font-weight: 900;
-                                -fx-text-fill: rgba(245,245,255,0.80);
-                                -fx-padding: 8px 12px;
-                            """);
-                }},
-                list
-        );
-
-        spreadSettings.setStyle("""
-                    -fx-background-color:
-                                    linear-gradient(to bottom, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 18%, rgba(255,255,255,0.00) 45%),
-                                    linear-gradient(to bottom, #141018 0%, #0f0c12 60%, #0b0910 100%);
-                                    -fx-font-family: 'Roboto Condensed';
-                    -fx-font-size: 12px;
-                    -fx-font-weight: 700;
-                    -fx-text-fill: rgba(245,245,255,0.75);
-                """);
-
-        return spreadSettings;
     }
 }

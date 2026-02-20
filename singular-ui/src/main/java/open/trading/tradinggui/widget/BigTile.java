@@ -234,25 +234,20 @@ public class BigTile {
     private final XYChart.Series<Number, Number> midSeries;
     private final XYChart.Series<Number, Number> bidSeries;
     private final XYChart.Series<Number, Number> askSeries;
-
-    // Keep references to chart and axes so we can force relayout / styling when window changes
-    private LineChart<Number, Number> tobChart;
-    private NumberAxis xAxis;
-    private NumberAxis yAxis;
-
     private final ComboBox<String> windowBox;
-
-    private volatile long windowMs = 5 * 60_000L; // default 5 minutes
-
-    // bucket state (minute/hour coalesce)
-    private long lastBucketX = Long.MIN_VALUE;
-
     // 5 levels x (BidQty, BidPx, Spread, AskPx, AskQty)
     private final Label[] bidQty = new Label[LADDER_LEVELS];
     private final Button[] bidPx = new Button[LADDER_LEVELS];
     private final Label[] lvlSpr = new Label[LADDER_LEVELS];
     private final Button[] askPx = new Button[LADDER_LEVELS];
     private final Label[] askQty = new Label[LADDER_LEVELS];
+    // Keep references to chart and axes so we can force relayout / styling when window changes
+    private LineChart<Number, Number> tobChart;
+    private NumberAxis xAxis;
+    private NumberAxis yAxis;
+    private volatile long windowMs = 5 * 60_000L; // default 5 minutes
+    // bucket state (minute/hour coalesce)
+    private long lastBucketX = Long.MIN_VALUE;
 
     public BigTile(String instrument) {
 
@@ -382,6 +377,32 @@ public class BigTile {
         this.pane = createTile();
     }
 
+    private static void applySpreadSizing(Label pill, boolean top) {
+        String text = pill.getText();
+        int len = (text == null) ? 0 : text.length();
+
+        double verticalPadding = top ? 7 : 5;
+        double baseMinWidth = top ? 64 : 56;
+
+        double extra = Math.max(0, len - 4) * (top ? 6.0 : 5.0);
+
+        pill.setPadding(new Insets(
+                verticalPadding,
+                10 + extra / 2.0,
+                verticalPadding,
+                10 + extra / 2.0
+        ));
+        pill.setMinWidth(baseMinWidth + extra);
+        pill.setAlignment(Pos.CENTER);
+    }
+
+    private static String formatQty(int q) {
+        if (q >= 1_000_000) return String.format("%.1fm", q / 1000000.0);
+        if (q >= 10_000) return String.format("%.1fk", q / 1000.0);
+        if (q >= 1_000) return String.format("%.2fk", q / 1000.0);
+        return Integer.toString(q);
+    }
+
     private LineChart<Number, Number> getLineChart() {
         // store axes on the instance so other handlers can force re-ranging
         this.xAxis = new NumberAxis();
@@ -477,32 +498,6 @@ public class BigTile {
         });
 
         return tobChart;
-    }
-
-    private static void applySpreadSizing(Label pill, boolean top) {
-        String text = pill.getText();
-        int len = (text == null) ? 0 : text.length();
-
-        double verticalPadding = top ? 7 : 5;
-        double baseMinWidth = top ? 64 : 56;
-
-        double extra = Math.max(0, len - 4) * (top ? 6.0 : 5.0);
-
-        pill.setPadding(new Insets(
-                verticalPadding,
-                10 + extra / 2.0,
-                verticalPadding,
-                10 + extra / 2.0
-        ));
-        pill.setMinWidth(baseMinWidth + extra);
-        pill.setAlignment(Pos.CENTER);
-    }
-
-    private static String formatQty(int q) {
-        if (q >= 1_000_000) return String.format("%.1fm", q / 1000000.0);
-        if (q >= 10_000) return String.format("%.1fk", q / 1000.0);
-        if (q >= 1_000) return String.format("%.2fk", q / 1000.0);
-        return Integer.toString(q);
     }
 
     public void updateBook(

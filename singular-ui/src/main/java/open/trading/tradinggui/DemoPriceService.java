@@ -12,6 +12,7 @@ public final class DemoPriceService {
 
     private final Random r = new Random();
     private final Map<String, Double> mid = new ConcurrentHashMap<>();
+    boolean first = true;
 
     private static double clamp(double v, double lo, double hi) {
         return Math.max(lo, Math.min(hi, v));
@@ -20,8 +21,6 @@ public final class DemoPriceService {
     private static int clampInt(int v, int lo, int hi) {
         return Math.max(lo, Math.min(hi, v));
     }
-
-    boolean first = true;
 
     public void start(Map<String, open.trading.tradinggui.widget.BigTile> tiles,
                       Map<String, PairConfig> configs) {
