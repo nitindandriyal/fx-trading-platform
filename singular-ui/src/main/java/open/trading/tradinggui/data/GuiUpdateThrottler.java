@@ -53,37 +53,39 @@ public class GuiUpdateThrottler {
         long now = System.nanoTime();
         if (now - lastUpdateNanos >= updateIntervalNanos) {
             if (!latestUpdates.isEmpty()) {
-                for (var entry : latestUpdates.entrySet()) {
-                    if (!tiles.containsKey(entry.getKey())) {
-                        try {
-                            final BigTile tile = BigTileFactory.create(entry.getKey().name());
-                            tiles.put(entry.getKey(), tile);
-                            Platform.runLater(() -> {
-                                tilePane.getChildren().add(tile.getPane());
-                            });
-                            LOGGER.info("Created tile for: {}", entry.getKey());
-                        } catch (InterruptedException e) {
-                            LOGGER.error(e.getMessage());
-                            Thread.currentThread().interrupt();
+                Platform.runLater(() -> {
+                    for (var entry : latestUpdates.entrySet()) {
+                        if (!tiles.containsKey(entry.getKey())) {
+                            try {
+                                final BigTile tile = BigTileFactory.create(entry.getKey().name());
+                                tiles.put(entry.getKey(), tile);
+                                Platform.runLater(() -> {
+                                    tilePane.getChildren().add(tile.getPane());
+                                });
+                                LOGGER.info("Created tile for: {}", entry.getKey());
+                            } catch (InterruptedException e) {
+                                LOGGER.error(e.getMessage());
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+
+                        QuoteUpdate update = entry.getValue();
+                        // Update the corresponding tile with the latest quote
+                        // This assumes you have a method to get the tile by symbol
+                        BigTile tile = tiles.get(entry.getKey());
+                        if (tile != null) {
+                            tile.updateBook(
+                                    update.bid(),
+                                    update.ask(),
+                                    update.bidPrices(),
+                                    update.bidSizes(),
+                                    update.askPrices(),
+                                    update.askSizes()
+                            );
+                            lastUpdateNanos = now;
                         }
                     }
-
-                    QuoteUpdate update = entry.getValue();
-                    // Update the corresponding tile with the latest quote
-                    // This assumes you have a method to get the tile by symbol
-                    BigTile tile = tiles.get(entry.getKey());
-                    if (tile != null) {
-                        tile.updateBook(
-                                update.bid(),
-                                update.ask(),
-                                update.bidPrices(),
-                                update.bidSizes(),
-                                update.askPrices(),
-                                update.askSizes()
-                        );
-                        lastUpdateNanos = now;
-                    }
-                }
+                });
             }
         }
     }

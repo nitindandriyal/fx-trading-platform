@@ -218,8 +218,6 @@ public class BigTile {
     private final Label spreadOverlay;
     private final Button ladderToggle;
 
-    // Segmented switch + stack
-    private final ToggleGroup modeGroup;
     private final ToggleButton ladderMode;
     private final ToggleButton ticksMode;
     private final HBox segmentBar;
@@ -244,10 +242,7 @@ public class BigTile {
     // Keep references to chart and axes so we can force relayout / styling when window changes
     private LineChart<Number, Number> tobChart;
     private NumberAxis xAxis;
-    private NumberAxis yAxis;
     private volatile long windowMs = 5 * 60_000L; // default 5 minutes
-    // bucket state (minute/hour coalesce)
-    private long lastBucketX = Long.MIN_VALUE;
 
     public BigTile(String instrument) {
 
@@ -323,7 +318,8 @@ public class BigTile {
         this.panelStack = new StackPane(ladderPanel, chartPanel);
 
         // ---- Segmented switch ----
-        this.modeGroup = new ToggleGroup();
+        // Segmented switch + stack
+        ToggleGroup modeGroup = new ToggleGroup();
         this.ladderMode = new ToggleButton("LADDER");
         this.ticksMode = new ToggleButton("TICKS");
         ladderMode.setToggleGroup(modeGroup);
@@ -438,7 +434,7 @@ public class BigTile {
             }
         });
 
-        this.yAxis = new NumberAxis();
+        NumberAxis yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
         yAxis.setAutoRanging(true);
         yAxis.setMinorTickVisible(false);
@@ -506,39 +502,37 @@ public class BigTile {
             double[] bidPrices, int[] bidSizes,
             double[] askPrices, int[] askSizes
     ) {
-        Platform.runLater(() -> {
-            LOGGER.info("Updating {}: topBid={}, topAsk={}, bidPrices={}, bidSizes={}, askPrices={}, askSizes={}", this.label.getText(),
-                    topBid, topAsk, bidPrices, bidSizes, askPrices, askSizes);
-            bid.setText(pxFmt.format(topBid));
-            ask.setText(pxFmt.format(topAsk));
+        LOGGER.info("Updating {}: topBid={}, topAsk={}, bidPrices={}, bidSizes={}, askPrices={}, askSizes={}", this.label.getText(),
+                topBid, topAsk, bidPrices, bidSizes, askPrices, askSizes);
+        bid.setText(pxFmt.format(topBid));
+        ask.setText(pxFmt.format(topAsk));
 
-            double topSpr = topAsk - topBid;
-            spreadOverlay.setText(sprFmt.format(topSpr));
-            applySpreadSizing(spreadOverlay, true);
+        double topSpr = topAsk - topBid;
+        spreadOverlay.setText(sprFmt.format(topSpr));
+        applySpreadSizing(spreadOverlay, true);
 
-            // ---- Tick capture for chart ----
-            double mid = (topBid + topAsk) / 2.0;
-            appendTick(topBid, topAsk, mid);
+        // ---- Tick capture for chart ----
+        double mid = (topBid + topAsk) / 2.0;
+        appendTick(topBid, topAsk, mid);
 
-            for (int i = 0; i < LADDER_LEVELS; i++) {
-                bidPx[i].setText(pxFmt.format(bidPrices[i]));
-                askPx[i].setText(pxFmt.format(askPrices[i]));
+        for (int i = 0; i < LADDER_LEVELS; i++) {
+            bidPx[i].setText(pxFmt.format(bidPrices[i]));
+            askPx[i].setText(pxFmt.format(askPrices[i]));
 
-                double s = askPrices[i] - bidPrices[i];
-                lvlSpr[i].setText(sprFmt.format(s));
-                applySpreadSizing(lvlSpr[i], false);
+            double s = askPrices[i] - bidPrices[i];
+            lvlSpr[i].setText(sprFmt.format(s));
+            applySpreadSizing(lvlSpr[i], false);
 
-                bidQty[i].setText(formatQty(bidSizes[i]));
-                askQty[i].setText(formatQty(askSizes[i]));
-            }
-        });
+            bidQty[i].setText(formatQty(bidSizes[i]));
+            askQty[i].setText(formatQty(askSizes[i]));
+        }
     }
 
     private void appendTick(double b, double a, double m) {
         long x = System.currentTimeMillis();
         pruneOldPoints(x - windowMs);
 
-        lastBucketX = x;
+        // bucket state (minute/hour coalesce)
 
         XYChart.Data<Number, Number> midP = new XYChart.Data<>(x, m);
         XYChart.Data<Number, Number> bidP = new XYChart.Data<>(x, b);

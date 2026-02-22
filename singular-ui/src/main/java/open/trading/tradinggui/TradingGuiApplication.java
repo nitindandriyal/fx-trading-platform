@@ -23,7 +23,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import open.trading.tradinggui.config.PairConfig;
 import open.trading.tradinggui.data.TickAeronSubscriber;
-import open.trading.tradinggui.widget.BigTile;
 import org.agrona.concurrent.AgentRunner;
 import org.agrona.concurrent.BackoffIdleStrategy;
 import pub.lab.trading.common.lifecycle.MultiStreamPoller;
@@ -95,7 +94,7 @@ public class TradingGuiApplication extends Application {
     }
 
     @Override
-    public void start(Stage stage) throws InterruptedException {
+    public void start(Stage stage) {
         System.setProperty("prism.lcdtext", "false");
 
         // Root becomes BorderPane so we can have a right drawer
@@ -157,8 +156,6 @@ public class TradingGuiApplication extends Application {
         // Setup AnimationTimer to process batched GUI updates at 60 FPS,
         // but throttled to 30 Hz (33ms) to prevent stalling
         AnimationTimer guiUpdateTimer = new AnimationTimer() {
-            private final Map<String, BigTile> tileCache = new LinkedHashMap<>();
-
             @Override
             public void handle(long now) {
                 // Process batched updates from throttler

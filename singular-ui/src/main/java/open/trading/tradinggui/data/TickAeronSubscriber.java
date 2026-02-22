@@ -44,9 +44,6 @@ public class TickAeronSubscriber implements FragmentHandler, Worker, AutoCloseab
         String symbol = currencyPair.name();
 
         long timestamp = quoteView.priceCreationTimestamp();
-        int tenor = quoteView.getTenor();
-        long valueDate = quoteView.getValueDate();
-        long clientTier = quoteView.getClientTier();
 
         double[] bidPrices = new double[LEVELS];
         double[] askPrices = new double[LEVELS];
@@ -76,11 +73,10 @@ public class TickAeronSubscriber implements FragmentHandler, Worker, AutoCloseab
                 timestamp
         );
         updateThrottler.enqueueUpdate(currencyPair, quoteUpdate);
-        LOGGER.info("Enqueued update for {}: bid={}, ask={}", symbol, bidPrices, askPrices);
     }
 
     @Override
-    public int doWork() throws Exception {
+    public int doWork() {
         // Poll Aeron for new fragments
         int fragmentsRead = sub.poll(this, 10);
 
