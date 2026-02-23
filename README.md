@@ -61,7 +61,8 @@ cd market-data
 mvn spring-boot:run
 ```
 
-![image](https://github.com/user-attachments/assets/7c120d5c-aa26-4af2-9a86-fd64c9d24d90)
+![Uploading wip_blotter_price_manager.gif…]()
+
 
 ## Architecture Diagram
 
