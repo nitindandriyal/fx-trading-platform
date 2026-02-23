@@ -61,12 +61,13 @@ cd market-data
 mvn spring-boot:run
 ```
 
-![Uploading wip_blotter_price_manager.gif…]()
+![wip_blotter_price_manager](https://github.com/user-attachments/assets/8b064ba3-39f7-40c5-8816-97df8d7edd92)
 
 
 ## Architecture Diagram
 
 Below is the architecture diagram of the FX Trading Platform, illustrating the interaction between the processes.
+
 
 ```mermaid
 graph TD
