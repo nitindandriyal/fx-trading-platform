@@ -36,7 +36,7 @@ The platform is structured into the following Maven modules:
 ---
 
 Blotter - Work In Progress
-<img width="2560" height="1392" alt="image" src="https://github.com/user-attachments/assets/7f2d5aab-77fc-4339-9912-8fff42b15231" />
+![wip_blotter_price_manager](https://github.com/user-attachments/assets/8b064ba3-39f7-40c5-8816-97df8d7edd92)
 
 
 ## 🛠️ Getting Started
@@ -60,8 +60,6 @@ mvn clean install
 cd market-data
 mvn spring-boot:run
 ```
-
-![wip_blotter_price_manager](https://github.com/user-attachments/assets/8b064ba3-39f7-40c5-8816-97df8d7edd92)
 
 
 ## Architecture Diagram
