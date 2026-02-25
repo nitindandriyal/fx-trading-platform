@@ -9,17 +9,23 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.component.DetachEvent;
 import play.lab.config.service.components.EditableConfigRow;
 import play.lab.marketdata.model.MarketDataTick;
 
-public class PricingConfigView extends VerticalLayout {
+import java.util.ArrayList;
+
+public class PricingConfigView extends VerticalLayout implements PriceUpdateListener {
     private final Grid<MarketDataTick> grid = new Grid<>(MarketDataTick.class);
     private final Grid<EditableConfigRow> configGrid = new Grid<>(EditableConfigRow.class);
     private final TextField symbolField = new TextField("Symbol (e.g. EURUSD)");
     private final NumberField priceField = new NumberField("Initial Price");
     private final NumberField volField = new NumberField("Volatility");
     private final NumberField spreadField = new NumberField("Spread (bps)");
-    private AeronService aeronService;
+    private final AeronService aeronService;
+    private ListDataProvider<MarketDataTick> gridDataProvider;
+
     public PricingConfigView(AeronService aeronServiceStatic) {
         this.aeronService = aeronServiceStatic;
 
@@ -75,25 +81,59 @@ public class PricingConfigView extends VerticalLayout {
     void init() {
         grid.setColumns("pair", "mid", "bid", "ask", "timestamp");
         configGrid.setColumns("ccy", "volatility", "spread");
-        // Enable polling every 1 second
-        UI.getCurrent().setPollInterval(1000);
 
-        // On each doWork, refresh the grid
-        UI.getCurrent().addPollListener(e -> refreshGrid());
+        // Initialize grid data provider with empty list
+        gridDataProvider = new ListDataProvider<>(new ArrayList<>(aeronService.getPrices()));
+        grid.setDataProvider(gridDataProvider);
 
+        // Subscribe to price updates (event-driven instead of polling)
+        aeronService.subscribePriceUpdates(this);
+
+        // Initial load
         refreshGrid();
-
     }
 
-    private void refreshGrid() {
+    @Override
+    public void onPriceUpdate(MarketDataTick tick) {
+        // Called for every tick (30+ Hz)
         getUI().ifPresent(ui -> ui.access(() -> {
-            if(aeronService!=null) {
-                grid.setItems(aeronService.getPrices());
+            if(gridDataProvider != null && tick != null) {
+                // Check if this pair already exists in grid
+                boolean found = false;
+                for (MarketDataTick existing : gridDataProvider.getItems()) {
+                    if (existing.getPair().equals(tick.getPair())) {
+                        // Update existing item
+                        gridDataProvider.refreshItem(tick);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    // Add new item
+                    gridDataProvider.getItems().add(tick);
+                    gridDataProvider.refreshAll();
+                }
             }
         }));
     }
 
-    public void setAeronService(AeronService aeronService) {
-        this.aeronService = aeronService;
+    private void refreshGrid() {
+        getUI().ifPresent(ui -> ui.access(() -> {
+            if(aeronService != null && gridDataProvider != null) {
+                gridDataProvider.getItems().clear();
+                gridDataProvider.getItems().addAll(aeronService.getPrices());
+                gridDataProvider.refreshAll();
+            }
+        }));
+    }
+
+    @Override
+    protected void onDetach(DetachEvent event) {
+        // Unsubscribe when view is destroyed to prevent memory leaks
+        if(aeronService != null) {
+            aeronService.unsubscribePriceUpdates(this);
+        }
+        super.onDetach(event);
     }
 }

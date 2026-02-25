@@ -149,40 +149,123 @@ public class TierConfigView extends VerticalLayout {
         }
 
         try {
+            String tierName = tierNameField.getValue();
+            int tierId = tierIdField.getValue().intValue();
+            double markupBps = markupBpsField.getValue();
+            double spreadTighteningFactor = spreadTighteningFactorField.getValue();
+            long quoteThrottleMs = quoteThrottleMsField.getValue().longValue();
+            long latencyProtectionMs = latencyProtectionMsField.getValue().longValue();
+            long quoteExpiryMs = quoteExpiryMsField.getValue().longValue();
+            double minNotional = minNotionalField.getValue();
+            double maxNotional = maxNotionalField.getValue();
+            byte pricePrecision = pricePrecisionField.getValue().byteValue();
+            boolean streamingEnabled = streamingEnabledField.getValue();
+            boolean limitOrderEnabled = limitOrderEnabledField.getValue();
+            boolean accessToCrosses = accessToCrossesField.getValue();
+            double creditLimitUsd = creditLimitUsdField.getValue();
+            byte tierPriority = tierPriorityField.getValue().byteValue();
+
+            // OPTIMISTIC UPDATE: Create tier object and add to grid immediately
+            // This provides instant UI feedback while Aeron syncs in the background
+            try {
+                ClientTierFlyweight optimisticTier = new ClientTierFlyweight();
+                org.agrona.concurrent.UnsafeBuffer buffer = new org.agrona.concurrent.UnsafeBuffer(
+                    java.nio.ByteBuffer.allocateDirect(1024));
+
+                optimisticTier.wrap(buffer, 0)
+                        .initMessage()
+                        .setTierId(tierId)
+                        .setTierName(tierName)
+                        .setMarkupBps(markupBps)
+                        .setSpreadTighteningFactor(spreadTighteningFactor)
+                        .setQuoteThrottleMs(quoteThrottleMs)
+                        .setLatencyProtectionMs(latencyProtectionMs)
+                        .setQuoteExpiryMs(quoteExpiryMs)
+                        .setMinNotional(minNotional)
+                        .setMaxNotional(maxNotional)
+                        .setPricePrecision(pricePrecision)
+                        .setStreamingEnabled(streamingEnabled)
+                        .setLimitOrderEnabled(limitOrderEnabled)
+                        .setAccessToCrosses(accessToCrosses)
+                        .setCreditLimitUsd(creditLimitUsd)
+                        .setTierPriority(tierPriority);
+
+                // Add to grid immediately (optimistic)
+                if (dataProvider != null) {
+                    dataProvider.getItems().add(optimisticTier);
+                    dataProvider.refreshAll();
+                    LOGGER.info("✅ Tier added to grid (optimistic): tierId={}, tierName={}", tierId, tierName);
+                } else {
+                    LOGGER.warn("⚠️ DataProvider is null, cannot add tier optimistically");
+                }
+            } catch (Exception e) {
+                LOGGER.warn("⚠️ Could not create optimistic tier, will update when confirmed: {}", e.getMessage());
+            }
+
+            // Clear form immediately
+            clearForm();
+
+            // Send async confirmation to server via Aeron
             aeronService.sendTier(
-                    tierIdField.getValue().intValue(),
-                    tierNameField.getValue(),
-                    markupBpsField.getValue(),
-                    spreadTighteningFactorField.getValue(),
-                    quoteThrottleMsField.getValue().longValue(),
-                    latencyProtectionMsField.getValue().longValue(),
-                    quoteExpiryMsField.getValue().longValue(),
-                    minNotionalField.getValue(),
-                    maxNotionalField.getValue(),
-                    pricePrecisionField.getValue().byteValue(),
-                    streamingEnabledField.getValue(),
-                    limitOrderEnabledField.getValue(),
-                    accessToCrossesField.getValue(),
-                    creditLimitUsdField.getValue(),
-                    tierPriorityField.getValue().byteValue(),
+                    tierId,
+                    tierName,
+                    markupBps,
+                    spreadTighteningFactor,
+                    quoteThrottleMs,
+                    latencyProtectionMs,
+                    quoteExpiryMs,
+                    minNotional,
+                    maxNotional,
+                    pricePrecision,
+                    streamingEnabled,
+                    limitOrderEnabled,
+                    accessToCrosses,
+                    creditLimitUsd,
+                    tierPriority,
                     this,
                     getUI()
             );
+
+            // Show user feedback
+            Notification.show("✅ Tier '" + tierName + "' added. Syncing with server...", 2000, Notification.Position.BOTTOM_CENTER);
+            LOGGER.info("Tier added (optimistic): tierId={}, tierName={}", tierId, tierName);
+
         } catch (IllegalArgumentException e) {
             Notification.show("Invalid input: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
+            LOGGER.error("Invalid argument when adding tier", e);
         } catch (Exception e) {
             Notification.show("Error adding tier: " + e.getMessage(), 3000, Notification.Position.MIDDLE);
+            LOGGER.error("Error adding tier", e);
         }
     }
 
     public void refreshGrid(Optional<UI> ui) {
-        LOGGER.info("Refreshing grid with latest tiers from AeronService {} {} {}", tierNameField.getValue(), aeronService, getUI().isPresent());
-        ui.ifPresent(u -> u.access(() -> {
-            LOGGER.info("Inside UI access block, refreshing grid with latest tiers from AeronService {} {}", tierNameField.getValue(), aeronService);
-            if (aeronService != null) {
-                init();
-            }
-        }));
+        LOGGER.info("🔄 Refreshing grid with latest tiers from AeronService. UI present: {}", ui.isPresent());
+        ui.ifPresentOrElse(
+            u -> u.access(() -> {
+                LOGGER.info("✅ Inside UI access block, refreshing grid with latest tiers");
+                try {
+                    if (aeronService != null) {
+                        Set<ClientTierFlyweight> tiers = aeronService.getCachedTiers();
+                        LOGGER.info("📊 Fetched {} tiers from AeronService cache", tiers.size());
+
+                        if (dataProvider != null) {
+                            dataProvider.getItems().clear();
+                            dataProvider.getItems().addAll(tiers);
+                            dataProvider.refreshAll();
+                            LOGGER.info("✅ Grid refreshed with {} tiers", tiers.size());
+                        } else {
+                            LOGGER.warn("⚠️ DataProvider is null, cannot refresh grid");
+                        }
+                    } else {
+                        LOGGER.warn("⚠️ AeronService is null, cannot refresh grid");
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("❌ Error refreshing grid", e);
+                }
+            }),
+            () -> LOGGER.warn("⚠️ UI not present, cannot refresh grid")
+        );
     }
 
     private void clearForm() {

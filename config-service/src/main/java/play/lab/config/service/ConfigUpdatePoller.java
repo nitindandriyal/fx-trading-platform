@@ -28,15 +28,18 @@ public class ConfigUpdatePoller implements Worker, AutoCloseable {
     private final Subscription subscription;
     private final ExclusivePublication publication;
     private final Set<ClientTierFlyweight> cache;
+    private final AeronService aeronService;
     private boolean connected = false;
     private TierConfigView tierConfigView;
     private Optional<UI> ui;
 
     public ConfigUpdatePoller(final Aeron aeron,
-                              final Set<ClientTierFlyweight> cache) {
+                              final Set<ClientTierFlyweight> cache,
+                              final AeronService aeronService) {
         this.subscription = aeron.addSubscription(AeronConfigs.REPLAY_CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode());
         this.publication = aeron.addExclusivePublication(AeronConfigs.PUBLISH_CONFIG_CHANNEL, StreamId.DATA_CONFIG_STREAM.getCode());
         this.cache = cache;
+        this.aeronService = aeronService;
     }
 
     @Override

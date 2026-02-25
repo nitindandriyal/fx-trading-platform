@@ -2,6 +2,7 @@ package play.lab.config.service;
 
 import com.vaadin.flow.component.UI;
 import io.aeron.Aeron;
+import io.aeron.Subscription;
 import io.aeron.archive.client.AeronArchive;
 import io.aeron.archive.client.RecordingDescriptorConsumer;
 import io.aeron.archive.codecs.SourceLocation;
@@ -32,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -48,9 +50,11 @@ public class AeronService {
     private final Set<ClientTierFlyweight> cache = new HashSet<>();
     private final ConcurrentMap<String, MarketDataTick> latestTicks = new ConcurrentHashMap<>();
     private final List<Recording> recordings = new ArrayList<>();
+    private final List<PriceUpdateListener> priceListeners = new CopyOnWriteArrayList<>();
 
     private final CountDownLatch aeronStarted;
     private ConfigUpdatePoller configUpdatePoller;
+    private Subscription marketDataSubscription;
 
     public AeronService(CountDownLatch aeronStarted) {
         this.aeronStarted = aeronStarted;
@@ -117,19 +121,25 @@ public class AeronService {
                                 .aeron(aeron)
                                 .controlRequestChannel(CONTROL_REQUEST_CHANNEL)
                                 .controlResponseChannel(CONTROL_RESPONSE_CHANNEL));
-                ConfigUpdatePoller configUpdatePoller = new ConfigUpdatePoller(aeron, cache);
+                ConfigUpdatePoller configUpdatePoller = new ConfigUpdatePoller(aeron, cache, this);
                 var barrier = new ShutdownSignalBarrier();
+                // Create market data subscription
+                Subscription marketDataSub = aeron.addSubscription(
+                        AeronConfigs.LIVE_CHANNEL,
+                        StreamId.DATA_RAW_QUOTE.getCode());
                 AgentRunner agentRunner = new AgentRunner(new BackoffIdleStrategy(),
                         Throwable::printStackTrace,
                         null,
                         new MultiStreamPoller(
                                 "config-service-poller",
                                 new Worker[]{
-                                        configUpdatePoller
+                                        configUpdatePoller,
+                                        new MarketDataPoller(marketDataSub, this)
                                 }
                         ))
         ) {
             this.configUpdatePoller = configUpdatePoller;
+            this.marketDataSubscription = marketDataSub;
             AgentRunner.startOnThread(agentRunner);
             LOGGER.info("Started {}", agentRunner.agent());
 
@@ -198,6 +208,49 @@ public class AeronService {
 
     public Collection<MarketDataTick> getPrices() {
         return latestTicks.values();
+    }
+
+    /**
+     * Subscribe to real-time price updates.
+     * The listener will be called for each market data tick at high frequency.
+     *
+     * @param listener The price update listener to subscribe
+     */
+    public void subscribePriceUpdates(PriceUpdateListener listener) {
+        priceListeners.add(listener);
+        LOGGER.info("Price listener subscribed, total: {}", priceListeners.size());
+    }
+
+    /**
+     * Unsubscribe from real-time price updates.
+     *
+     * @param listener The price update listener to unsubscribe
+     */
+    public void unsubscribePriceUpdates(PriceUpdateListener listener) {
+        priceListeners.remove(listener);
+        LOGGER.info("Price listener unsubscribed, total: {}", priceListeners.size());
+    }
+
+    /**
+     * Notify all registered listeners of a price update.
+     * Called from MarketDataPoller when a new tick arrives.
+     *
+     * @param tick The market data tick with updated prices
+     */
+    public void notifyPriceUpdate(MarketDataTick tick) {
+        // Update the latestTicks cache
+        if (tick != null && tick.getPair() != null) {
+            latestTicks.put(tick.getPair().toString(), tick);
+        }
+
+        // Notify all listeners
+        priceListeners.forEach(listener -> {
+            try {
+                listener.onPriceUpdate(tick);
+            } catch (Exception e) {
+                LOGGER.error("Error notifying price listener", e);
+            }
+        });
     }
 
     public void stopEventLoop() {
