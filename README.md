@@ -33,51 +33,58 @@ The platform is structured into the following Maven modules:
 - `aeron-media-driver` – Independent media driver with arhciving enabled to store and retrieve the runtime
   configurations.
 
-```
-                                      ┌───────────────────────┐
-       Clients                        │ Configuration Service │
-   ┌────────────────┐                 │ (config-service)      │
-   │ Trader UI      │◄──────────────┐ │ Vaadin UI + Aeron     │
-   │ (frontend)     │               │ └───────────────────────┘
-   └────────▲───────┘               │
-            │                       ▼
-            │                 ┌────────────────┐
-            │                 │ API Gateway /  │
-            └──────────────▶  │ REST Endpoints │
-                              └──────▲─────────┘
-                                     │
-                                     ▼
-                           ┌─────────────────────────┐
-                           │ Core Engines & Services │
-                           │                         │
-                           │  • Market Data Ingestion│
-                           │    (market-data)        │
-                           │  • Pricing Engine       │
-                           │    (core-pricing-engine)│
-                           │  • Quoting Engine       │
-                           │    (quoting-engine)     │
-                           │  • Spot Pricing Engine │
-                           │    (spot-pricing-engine)│
-                           │  • Position Service     │
-                           │    (position-service)   │
-                           └───────────▲─────────────┘
-                                       │
-             ┌─────────────────────────┼────────────────────────┐
-             │                         │                        │
-             ▼                         ▼                        ▼
-┌─────────────────────┐    ┌─────────────────────┐   ┌─────────────────────┐
-│  Feed Handlers      │    │  Hedging Engine     │   │ Smart Order Router  │
-│  (feed-handlers)    │    │  (hedging-engine)   │   │ (smart-order-router)│
-└─────────▲───────────┘    └────────▲───────────┘   └──────────▲──────────┘
-          │                        │                          │
-          ▼                        ▼                          ▼
-       External                External                     Downstream
-   Market & Liquidity         Risk & Limits              Execution Services
-     Providers & Feeds        Engines / Rules              & Brokers
-     (FIX / REST / Streaming)                            (via APIs / FIX)
+```mermaid
+flowchart TB
 
----
+    %% Clients
+    UI[Trader UI / Vaadin Frontend]
+
+    %% API Layer
+    APIGW[API Gateway / REST Layer]
+    CONFIG[Configuration Service]
+
+    %% Core Services
+    MD[Market Data Service]
+    PRICING[Core Pricing Engine]
+    SPOT[Spot Pricing Engine]
+    QUOTE[Quoting Engine]
+    POSITION[Position Service]
+
+    %% Trading Logic
+    HEDGE[Hedging Engine]
+    SOR[Smart Order Router]
+
+    %% External Systems
+    FEEDS[External Market Data Providers]
+    RISK[Risk & Limits Systems]
+    EXEC[Execution Venues / Brokers]
+
+    %% Flows
+    UI --> APIGW
+    APIGW --> PRICING
+    APIGW --> POSITION
+    APIGW --> CONFIG
+
+    FEEDS --> MD
+    MD --> PRICING
+    PRICING --> SPOT
+    PRICING --> QUOTE
+
+    QUOTE --> HEDGE
+    HEDGE --> RISK
+    HEDGE --> SOR
+
+    SOR --> EXEC
+    EXEC --> POSITION
+
+    CONFIG --> PRICING
+    CONFIG --> QUOTE
+
+    %% Annotations
+    classDef external fill:#f9f,stroke:#333,stroke-width:2px
 ```
+
+
 Blotter - Work In Progress
 ![wip_blotter_price_manager](https://github.com/user-attachments/assets/8b064ba3-39f7-40c5-8816-97df8d7edd92)
 
