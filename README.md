@@ -33,7 +33,8 @@ The platform is structured into the following Maven modules:
 - `aeron-media-driver` – Independent media driver with arhciving enabled to store and retrieve the runtime
   configurations.
 
-                                        ┌───────────────────────┐
+```
+                                      ┌───────────────────────┐
        Clients                        │ Configuration Service │
    ┌────────────────┐                 │ (config-service)      │
    │ Trader UI      │◄──────────────┐ │ Vaadin UI + Aeron     │
@@ -76,7 +77,7 @@ The platform is structured into the following Maven modules:
      (FIX / REST / Streaming)                            (via APIs / FIX)
 
 ---
-
+```
 Blotter - Work In Progress
 ![wip_blotter_price_manager](https://github.com/user-attachments/assets/8b064ba3-39f7-40c5-8816-97df8d7edd92)
 
