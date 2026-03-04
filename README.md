@@ -66,34 +66,6 @@ mvn spring-boot:run
 
 Below is the architecture diagram of the FX Trading Platform, illustrating the interaction between the processes.
 
-
-```mermaid
-graph TD
-
-    %% Backend Services
-    C[Market Data Service]
-    D[Aeron Media Driver]
-    E[Pricing Engine]
-    F[Quoting Engine]
-    G[Pricing Adapter]
-    H[Config Service]
-
-    %% Service Interactions
-    C --> D
-    E --> D
-    F --> D
-    G --> D
-    H --> D
-    D --> C
-    D --> E
-    D --> F
-    D --> G
-    D --> H
-
-    %% Annotations
-    classDef external fill:#f9f,stroke:#333,stroke-width:2px
-```
-
 OMS
 
 ```mermaid
