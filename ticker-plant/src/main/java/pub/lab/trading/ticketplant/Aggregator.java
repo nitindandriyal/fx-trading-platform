@@ -6,17 +6,19 @@ import play.lab.model.sbe.GoldenTickEncoder;
 import play.lab.model.sbe.MessageHeaderEncoder;
 import play.lab.model.sbe.VenueID;
 import play.lab.model.sbe.VenueTickDecoder;
+import pub.lab.trading.common.lifecycle.Worker;
 import pub.lab.trading.common.util.CachedClock;
 
 import java.nio.ByteBuffer;
 
-public class Aggregator {
+public class Aggregator implements Worker {
     private final int INITIAL_BUFFER_CAPACITY = 512;
     private final long[][] venueStates = new long[8][4];
     private final GoldenTickEncoder encoder = new GoldenTickEncoder();
     private final UnsafeBuffer buffer = new UnsafeBuffer(ByteBuffer.allocateDirect(INITIAL_BUFFER_CAPACITY));
     private final Publication publication;
     private final CachedClock clock;
+
     public Aggregator(final Publication publication, final CachedClock clock) {
         this.publication = publication;
         this.clock = clock;
@@ -67,5 +69,15 @@ public class Aggregator {
                 .tpTimestamp(clock.nanoTime());
 
         publication.offer(buffer, 0, encoder.encodedLength());
+    }
+
+    @Override
+    public int doWork() {
+        return 0;
+    }
+
+    @Override
+    public String roleName() {
+        return "TickPlant-Aggregator";
     }
 }
