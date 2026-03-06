@@ -22,3 +22,45 @@ The ticker plant sits at the entry point of a trading architecture, performing t
 *   **Microsecond Latency**: Designed to process millions of messages per second to ensure traders have the most current "top of book" prices.
 *   **Fault Tolerance**: High-availability configurations to prevent data gaps during peak market volatility.
 *   **Scalability**: Ability to handle massive spikes in message rates during major economic events.
+    
+General Architecture Diagram:
+
+                Exchange Feeds
+            (ITCH / OUCH / FIX / FAST)
+                    │
+                    ▼
+            +--------------------+
+            |   Feed Handlers    |
+            |  (Protocol Decode) |
+            +--------------------+
+                    │
+                    ▼
+              Normalized Events
+                    │
+                    ▼
+            +------------------+
+            |  Ingress Queue   |
+            |  (Agrona RB)     |
+            +------------------+
+                    │
+                    ▼
+            +------------------+
+            |  Ticker Plant    |
+            |  Aggregator      |
+            +------------------+
+                │         │
+                │         │
+                ▼         ▼
+            Journal     OrderBook
+            (Replay)    Builder
+                │          │
+                └───┬──────┘
+                    ▼
+            Golden Tick Generator
+                    │
+                    ▼
+            Aeron Multicast Bus
+                    │
+        ┌───────────┼─────────────┐
+        ▼           ▼             ▼
+    Algo Engine    Risk       RealTime DB
